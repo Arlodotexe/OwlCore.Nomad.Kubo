@@ -6,7 +6,7 @@ Nomad enables applications to distribute their application domain across a set o
 
 Put simply, this library was built to cover the gap between "User device" and "User" with eventual consistency.
 
-In Nomad, the state of an object is rebuilt from a seed by replaying the member calls present in one or more event stream sources, always in the UTC order of execution. Even as peers come and go, no CDRTs or special conflict resolution logic is required. Conflict resolution is effectively delegated to an implementation detail. 
+In Nomad, the state of an object is rebuilt from a seed by replaying the member calls present in one or more event stream sources, always in the UTC order of execution. Even as peers come and go making changes, no CDRTs or special conflict resolution logic is required. Conflict resolution is effectively delegated to an implementation detail. 
 
 This library was specially crafted to take advantage of content addressing under a changing device topology, especially considering the broadcast-only nature of IPNS, the immutability of IPFS CIDs, and the need for a permission-aware "shared" p2p-native state that reaches an eventually consistency defined by the application.
 
