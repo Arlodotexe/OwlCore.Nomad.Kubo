@@ -21,6 +21,8 @@ This library was specially crafted to take advantage of content addressing under
 
 This library is in prerelease and documentation is a work-in-progress. Reach out if you'd like to use this library in your own application.
 
+![](./docs/whiteboard.png)
+
 ## Install
 
 Published releases are available on [NuGet](https://www.nuget.org/packages/OwlCore.Nomad.Kubo). To install, run the following command in the [Package Manager Console](https://docs.nuget.org/docs/start-here/using-the-package-manager-console).
