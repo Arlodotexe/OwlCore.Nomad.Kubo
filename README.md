@@ -8,7 +8,7 @@ Put simply, this library was built to cover the gap between "User device" and "U
 
 In Nomad, the state of an object is rebuilt from a seed by replaying the member calls present in one or more event stream sources, always in the UTC order of execution. Even as peers come and go, no CDRTs or special conflict resolution logic is required. Conflict resolution is effectively delegated to an implementation detail. 
 
-This library was specially crafted to take advantage of content addressing under a changing device topology, especially considering the broadcast-only nature of IPNS, the immutability of IPFS CIDs, and the need to create a "shared" p2p-native state while still reaching eventually consistency on the resulting data.
+This library was specially crafted to take advantage of content addressing under a changing device topology, especially considering the broadcast-only nature of IPNS, the immutability of IPFS CIDs, and the need to create a permission-aware "shared" p2p-native state while still reaching eventually consistency on the resulting data.
 
 ## Featuring:
 - Interfaces and models for building Nomad applications using Ipfs/Kubo.
