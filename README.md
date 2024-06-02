@@ -6,7 +6,7 @@ Nomad enables applications to distribute their application domain across a set o
 
 Put simply, this library was built to cover the gap between "User device" and "User" with eventual consistency.
 
-In Nomad, the state of an object is rebuilt from a seed by replaying and aggregating separate event streams representing interactions with an application domain on a specific device. Even as peers come and go, recording and broadcasting peer-specific interactions with the application domain allows the aggregated state to eventually converge on each device without CDRTs or generalizable conflict resolution logic. Conflict resolution is effectively delegated to an implementation detail. 
+In Nomad, the state of an object is rebuilt from a seed by replaying and aggregating individual event streams published by individual devices, each containing data on interactions with an application domain on that device. Even as peers come and go, recording and broadcasting peer-specific interactions with the application domain allows the aggregated state to eventually converge on each device without CDRTs or generalizable conflict resolution logic. Conflict resolution is effectively delegated to an implementation detail. 
 
 This library was specially crafted to take advantage of content addressing under a changing device topology, especially considering the broadcast-only nature of IPNS, the immutability of IPFS CIDs, and the need for a permission-aware "shared" p2p-native state that reaches an eventually consistency defined by the application.
 
