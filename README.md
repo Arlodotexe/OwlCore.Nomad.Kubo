@@ -8,7 +8,7 @@ Put simply, this library was built to cover the gap between "User device" and "U
 
 In Nomad, the state of an object is rebuilt from a seed by replaying and aggregating individual event streams published by individual devices, each containing an append-only history of interactions performed against an application domain on that device. Even as peers come and go, publishing only peer-specific interactions with the application domain allows the consolidated state to eventually converge on each device without CDRTs or generalizable conflict resolution logic. Conflict resolution is effectively delegated to an implementation detail. 
 
-This library was specially crafted to take advantage of content addressing under a changing device topology, especially considering the broadcast-only nature of IPNS, the immutability of IPFS CIDs, and the need for a permission-aware "shared" p2p-native state that reaches an eventually consistency defined by the application.
+This library was specially crafted to take advantage of content addressing under a changing device topology, especially considering the one-to-many nature of IPNS, the immutability of IPFS CIDs, and the need for a permission-aware "shared" p2p-native state that reaches an eventually consistency defined by the application.
 
 ## Featuring:
 - Interfaces and models for building Nomad applications using Ipfs/Kubo.
