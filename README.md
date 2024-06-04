@@ -6,7 +6,9 @@ Put simply, this library was built to help you easily cover the gap between "Use
 
 Nomad enables applications to distribute their application domain across a set of peers. It does this by having each one maintain their own modifiable event stream while reading the read-only event streams published by other peers. 
 
-The state of an object is rebuilt from a seed by replaying and aggregating individual event streams published by individual devices, each containing an append-only history of interactions performed against an application domain on that device. Even as peers come and go, publishing only peer-specific interactions with the application domain allows the consolidated state to eventually converge on each device without CDRTs or generalizable conflict resolution logic. Conflict resolution is effectively delegated to an implementation detail. 
+The state of an object is rebuilt from a seed by replaying and aggregating individual event streams published by individual devices, each containing an append-only history of interactions performed against an application domain on that device.
+
+Even as peers come and go, publishing only peer-specific interactions with the application domain allows the consolidated state to eventually converge on each device without CDRTs or generalizable conflict resolution logic. Conflict resolution is effectively delegated to an implementation detail. 
 
 This library was specially crafted to take advantage of content addressing under a changing device topology, especially considering the one-to-many nature of IPNS, the immutability of IPFS CIDs, and the need for a permission-aware "shared" p2p-native state that reaches an eventually consistency defined by the application.
 
