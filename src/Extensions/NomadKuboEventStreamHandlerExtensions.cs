@@ -13,18 +13,40 @@ namespace OwlCore.Nomad.Kubo;
 public static class NomadKuboEventStreamHandlerExtensions
 {
     /// <summary>
+    /// Handles resolving a dag content pointer for Kubo on an event stream handler.
+    /// </summary>
+    /// <returns>The resolved content.</returns>
+    public static async Task<TResult> ResolveContentPointerAsync<TResult, TEventEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventEntryContent> handler, Cid cid, CancellationToken ctk)
+    {
+        var resolved = await handler.Client.ResolveDagCidAsync<TResult>(cid, nocache: !handler.KuboOptions.UseCache, ctk);
+        Guard.IsNotNull(resolved.Result);
+        return resolved.Result;
+    }
+
+
+    /// <summary>
+    /// Given a published ipns key containing roaming nomad data, return the sources that were published. 
+    /// </summary>
+    /// <returns>The sources from the roaming key.</returns>
+    public static async Task<ICollection<Cid>?> GetSourcesFromRoamingKeyAsync(this Cid roamingNomadEventStreamCid, ICoreApi client, IKuboOptions kuboOptions, CancellationToken cancellationToken)
+    {
+        var sourcesContainer = await roamingNomadEventStreamCid.ResolveDagCidAsync<ISources<Cid>>(client, !kuboOptions.UseCache, cancellationToken);
+        return sourcesContainer.Result?.Sources;
+    }
+    
+    /// <summary>
     /// Publishes the inner content to the roaming ipns key on <paramref name="eventStreamHandler"/>.
     /// </summary>
     public static async Task PublishRoamingAsync<TEventStreamHandler, TEventEntryContent, TContent>(
         this TEventStreamHandler eventStreamHandler,
         CancellationToken cancellationToken)
-        where TContent : class, ISources<KuboNomadEventStream>
+        where TContent : class, ISources<Cid>
         where TEventStreamHandler : IModifiableNomadKuboEventStreamHandler<TEventEntryContent>, IDelegable<TContent>
     {
         // Move event stream handler sources used to construct object into inner to be serialized for roaming object
         foreach (var source in eventStreamHandler.Sources)
         {
-            if (eventStreamHandler.Inner.Sources.All(x => x.Id != source.Id))
+            if (eventStreamHandler.Inner.Sources.All(x => x != source))
                 eventStreamHandler.Inner.Sources.Add(source);
         }
 

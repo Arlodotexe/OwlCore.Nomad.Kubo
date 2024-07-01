@@ -23,7 +23,7 @@ public abstract class ReadOnlyNomadKuboEventStreamHandler<TEventEntryContent> : 
     public KuboNomadEventStreamEntry? EventStreamPosition { get; set; }
 
     /// <inheritdoc />
-    public required ICollection<KuboNomadEventStream> Sources { get; init; }
+    public required ICollection<Cid> Sources { get; init; }
 
     /// <inheritdoc />
     public required string Id { get; init; }
