@@ -15,13 +15,30 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.1.0</Version>
+		<Version>0.2.0</Version>
 		<Product>OwlCore</Product>
 		<Description>Shared tooling for building Nomad-enabled applications on ipfs</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.2.0 ---
+[Breaking]
+Migrated to OwlCore.Nomad 0.5.0, inherited breaking changes.
+Removed empty NomadEventStream in favor of EventStream{Cid}, as no additional fields are needed here.
+Removed empty NomadEventStreamEntry in favor of EventStreamEntry{Cid}, as no additional fields are needed here.
+Fixed NomadKuboEventStreamHandlerExtensions.GetSourcesFromRoamingKeyAsync not deserializing sources, now takes a generic param.
+
+[Improvements]
+Made ReadOnlyNomadKuboEventStreamHandler.Sources virtual.
+Made ReadOnlyNomadKuboEventStreamHandler.TryAdvanceEventStreamAsync virtual.
+
+[New]
+Added inbox SourceAddEvent, SourceRemoveEvent and abstract EventEntryContent records.
+Added NomadKuboEventStreamHandlerExtensions.ResolveEventStreamEntriesAsync. Re-implemented from OwlCore.Nomad to also handle recursively resolving entries from SourceAdd and SourceRemove events.
+Added NomadKuboEventStreamHandlerExtensions.AdvanceSharedEventStreamAsync. Ported as-is from OwlCore.Nomad, but with Kubo types.
+Added NomadKuboEventStreamHandlerExtensions.AdvanceEventStreamToAtLeastAsync. Ported as-is from OwlCore.Nomad, but with Kubo types.
+
 --- 0.1.0 ---
 [Breaking]
 Migrated to OwlCore.Nomad 0.4.0, inherited breaking changes.
@@ -65,8 +82,8 @@ Initial release of OwlCore.Nomad.Kubo.
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-		<PackageReference Include="OwlCore.Kubo" Version="0.16.1" />
-		<PackageReference Include="OwlCore.Nomad" Version="0.4.0" />
+		<PackageReference Include="OwlCore.Kubo" Version="0.16.4" />
+    <PackageReference Include="OwlCore.Nomad" Version="0.5.0" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

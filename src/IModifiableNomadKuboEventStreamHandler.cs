@@ -6,7 +6,7 @@ namespace OwlCore.Nomad.Kubo;
 /// A modifiable kubo-based storage interface.
 /// </summary>
 public interface IModifiableNomadKuboEventStreamHandler<TEventEntryContent> :
-    IModifiableSharedEventStreamHandler<TEventEntryContent, Cid, KuboNomadEventStream, KuboNomadEventStreamEntry>,
+    IModifiableSharedEventStreamHandler<TEventEntryContent, Cid, EventStream<Cid>, EventStreamEntry<Cid>>,
     IReadOnlyNomadKuboEventStreamHandler<TEventEntryContent>
 {
     /// <summary>
