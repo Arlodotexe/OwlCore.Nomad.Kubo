@@ -189,6 +189,7 @@ public static class NomadKuboEventStreamHandlerExtensions
         {
             // Resolve event stream for each source
             var sourceCid = sourceKvp.Key;
+            Logger.LogInformation($"Processing event stream {sourceCid}");
             Guard.IsNotNullOrWhiteSpace(sourceCid);
 
             var eventStream = await eventStreamHandler.ResolveContentPointerAsync<EventStream<Cid>, TEventStreamEntryContent>(sourceCid, cancellationToken);
@@ -211,6 +212,7 @@ public static class NomadKuboEventStreamHandlerExtensions
             var entriesDict = sourceKvp.Value;
             foreach (var entryCid in eventStream.Entries)
             {
+                Logger.LogInformation($"Processing event stream entry {sourceCid}");
                 Guard.IsNotNullOrWhiteSpace(entryCid);
                 var entry = await eventStreamHandler.ResolveContentPointerAsync<EventStreamEntry<Cid>, TEventStreamEntryContent>(entryCid, cancellationToken);
                 Guard.IsNotNull(entry);
@@ -237,17 +239,24 @@ public static class NomadKuboEventStreamHandlerExtensions
                     Guard.IsNotNullOrWhiteSpace(sourceAddEvent.TargetId);
 
                     // Add to handler
-                    if (!eventStreamHandler.Sources.Contains(sourceAddEvent.AddedSourcePointer))
+                    if (eventStreamHandler.Sources.All(x => x != sourceAddEvent.AddedSourcePointer))
+                    {
                         eventStreamHandler.Sources.Add(sourceAddEvent.AddedSourcePointer);
+                        Logger.LogInformation($"Added source {sourceAddEvent.AddedSourcePointer} to event stream handler {eventStreamHandler.Id}");   
+                    }
 
                     // Add to queue
                     var newKvp = new KeyValuePair<Cid, Dictionary<Cid, EventStreamEntry<Cid>>>(sourceAddEvent.AddedSourcePointer, []);
                     queue.Enqueue(newKvp);
                     sourceEvents.Add(newKvp.Key, newKvp.Value);
+                    Logger.LogInformation($"Enqueued new source {newKvp.Key} for entry resolution");
 
                     // Unmark as removed if needed
-                    if (removedSources.Contains(sourceAddEvent.AddedSourcePointer))
+                    if (removedSources.Any(x => x == sourceAddEvent.AddedSourcePointer))
+                    {
                         removedSources.Remove(sourceAddEvent.AddedSourcePointer);
+                        Logger.LogInformation($"Unmarked source {sourceAddEvent.AddedSourcePointer} as removed {eventStreamHandler.Id}");   
+                    }
                 }
                 // Removed source
                 else if (entry.EventId == nameof(SourceRemoveEvent))
@@ -258,12 +267,16 @@ public static class NomadKuboEventStreamHandlerExtensions
                     Guard.IsNotNullOrWhiteSpace(sourceRemoveEvent.TargetId);
 
                     if (eventStreamHandler.Sources.Contains(sourceRemoveEvent.RemovedSourcePointer))
+                    {
+                        Logger.LogInformation($"Removed source {sourceRemoveEvent.RemovedSourcePointer} from event stream handler {eventStreamHandler.Id}");   
                         eventStreamHandler.Sources.Remove(sourceRemoveEvent.RemovedSourcePointer);
+                    }
 
                     // Don't want to re-resolve if source is re-added
                     // Rather than removing the event stream source and entries,
                     // mark as 'removed' and don't yield.
                     removedSources.Add(sourceRemoveEvent.RemovedSourcePointer);
+                    Logger.LogInformation($"Marked source {sourceRemoveEvent.RemovedSourcePointer} as removed {eventStreamHandler.Id}");   
                 }
             }
         }
