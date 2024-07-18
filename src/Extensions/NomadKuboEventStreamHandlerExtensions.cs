@@ -288,7 +288,9 @@ public static class NomadKuboEventStreamHandlerExtensions
                 Guard.IsNotNullOrWhiteSpace(entry.Value.Content);
                 Guard.IsNotNullOrWhiteSpace(entry.Value.EventId);
                 Guard.IsNotNullOrWhiteSpace(entry.Value.TargetId);
-                yield return entry.Value;
+                
+                if (entry.Value.EventId != nameof(SourceAddEvent) && entry.Value.EventId != nameof(SourceRemoveEvent))
+                    yield return entry.Value;
             }
         }
     }
