@@ -189,7 +189,6 @@ public static class NomadKuboEventStreamHandlerExtensions
         {
             // Resolve event stream for each source
             var sourceCid = sourceKvp.Key;
-            Logger.LogInformation($"Processing event stream {sourceCid}");
             Guard.IsNotNullOrWhiteSpace(sourceCid);
 
             var eventStream = await eventStreamHandler.ResolveContentPointerAsync<EventStream<Cid>, TEventStreamEntryContent>(sourceCid, cancellationToken);
@@ -212,7 +211,6 @@ public static class NomadKuboEventStreamHandlerExtensions
             var entriesDict = sourceKvp.Value;
             foreach (var entryCid in eventStream.Entries)
             {
-                Logger.LogInformation($"Processing event stream entry {sourceCid}");
                 Guard.IsNotNullOrWhiteSpace(entryCid);
                 var entry = await eventStreamHandler.ResolveContentPointerAsync<EventStreamEntry<Cid>, TEventStreamEntryContent>(entryCid, cancellationToken);
                 Guard.IsNotNull(entry);
