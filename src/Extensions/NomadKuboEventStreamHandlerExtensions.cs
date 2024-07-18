@@ -178,15 +178,19 @@ public static class NomadKuboEventStreamHandlerExtensions
         var removedSources = new HashSet<Cid>();
 
         var queue = new Queue<KeyValuePair<Cid, Dictionary<Cid, EventStreamEntry<Cid>>>>(sourceEvents);
-        while (queue.Count > 0 && queue.Dequeue() is var currentSourceKvp)
+        while (queue.Count > 0 && queue.Dequeue() is var sourceKvp)
         {
             // Resolve event stream for each source
-            var sourceCid = currentSourceKvp.Key;
-            var eventStream = await eventStreamHandler.ResolveContentPointerAsync<EventStream<Cid>, TEventStreamEntryContent>(sourceCid, cancellationToken);
+            var sourceCid = sourceKvp.Key;
+            Guard.IsNotNullOrWhiteSpace(sourceCid);
 
-            if (removedSources.Contains(currentSourceKvp.Key))
+            var eventStream = await eventStreamHandler.ResolveContentPointerAsync<EventStream<Cid>, TEventStreamEntryContent>(sourceCid, cancellationToken);
+            Guard.IsNotNullOrWhiteSpace(eventStream.TargetId);
+            Guard.IsNotNullOrWhiteSpace(eventStreamHandler.Id);
+
+            if (removedSources.Contains(sourceCid))
             {
-                Logger.LogWarning($"Source {currentSourceKvp.Key} was marked as removed and has been skipped. It will not be resolved unless it is re-added.");
+                Logger.LogWarning($"Source {sourceCid} was marked as removed and has been skipped. It will not be resolved unless it is re-added.");
                 continue;
             }
 
@@ -197,11 +201,16 @@ public static class NomadKuboEventStreamHandlerExtensions
             }
 
             // Resolve and collect event stream entries
-            var entriesDict = currentSourceKvp.Value;
+            var entriesDict = sourceKvp.Value;
             foreach (var entryCid in eventStream.Entries)
             {
+                Guard.IsNotNullOrWhiteSpace(entryCid);
                 var entry = await eventStreamHandler.ResolveContentPointerAsync<EventStreamEntry<Cid>, TEventStreamEntryContent>(entryCid, cancellationToken);
                 entriesDict[entryCid] = entry;
+
+                Guard.IsNotNullOrWhiteSpace(entry.TargetId);
+                Guard.IsNotNullOrWhiteSpace(entry.EventId);
+                Guard.IsNotNullOrWhiteSpace(entry.Content);
 
                 if (entry.TargetId != eventStreamHandler.Id)
                 {
@@ -213,6 +222,9 @@ public static class NomadKuboEventStreamHandlerExtensions
                 if (entry.EventId == nameof(SourceAddEvent))
                 {
                     var sourceAddEvent = await eventStreamHandler.ResolveContentPointerAsync<SourceAddEvent, TEventStreamEntryContent>(entry.Content, cancellationToken);
+                    Guard.IsNotNullOrWhiteSpace(sourceAddEvent.AddedSourcePointer);
+                    Guard.IsNotNullOrWhiteSpace(sourceAddEvent.EventId);
+                    Guard.IsNotNullOrWhiteSpace(sourceAddEvent.TargetId);
 
                     // Add to handler
                     if (!eventStreamHandler.Sources.Contains(sourceAddEvent.AddedSourcePointer))
@@ -231,6 +243,9 @@ public static class NomadKuboEventStreamHandlerExtensions
                 else if (entry.EventId == nameof(SourceRemoveEvent))
                 {
                     var sourceRemoveEvent = await eventStreamHandler.ResolveContentPointerAsync<SourceRemoveEvent, TEventStreamEntryContent>(entry.Content, cancellationToken);
+                    Guard.IsNotNullOrWhiteSpace(sourceRemoveEvent.RemovedSourcePointer);
+                    Guard.IsNotNullOrWhiteSpace(sourceRemoveEvent.EventId);
+                    Guard.IsNotNullOrWhiteSpace(sourceRemoveEvent.TargetId);
 
                     if (eventStreamHandler.Sources.Contains(sourceRemoveEvent.RemovedSourcePointer))
                         eventStreamHandler.Sources.Remove(sourceRemoveEvent.RemovedSourcePointer);
@@ -248,6 +263,7 @@ public static class NomadKuboEventStreamHandlerExtensions
         {
             var sourceCid = eventDataKvp.Key;
             var eventStreamEntries = eventDataKvp.Value;
+            Guard.IsNotNullOrWhiteSpace(sourceCid);
 
             // Exclude removed (not re-added) sources
             if (removedSources.Contains(sourceCid))
@@ -258,6 +274,9 @@ public static class NomadKuboEventStreamHandlerExtensions
 
             foreach (var entry in eventStreamEntries)
             {
+                Guard.IsNotNullOrWhiteSpace(entry.Value.Content);
+                Guard.IsNotNullOrWhiteSpace(entry.Value.EventId);
+                Guard.IsNotNullOrWhiteSpace(entry.Value.TargetId);
                 yield return entry.Value;
             }
         }
