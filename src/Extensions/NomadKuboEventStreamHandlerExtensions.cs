@@ -129,10 +129,14 @@ public static class NomadKuboEventStreamHandlerExtensions
     /// </summary>
     public static async IAsyncEnumerable<EventStreamEntry<Cid>> AdvanceSharedEventStreamAsync<TEventStreamEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventStreamEntryContent> eventStreamHandler, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        Guard.IsNotNull(eventStreamHandler);
+        
         // Playback event stream
         // Order event entries by oldest first
         await foreach (var eventEntry in eventStreamHandler.ResolveEventStreamEntriesAsync(cancellationToken).OrderBy(x => x.TimestampUtc))
         {
+            Guard.IsNotNull(eventEntry);
+            
             // Advance event stream for all listening objects
             await eventStreamHandler.ListeningEventStreamHandlers
                 .Where(x => x.Id == eventEntry.TargetId)
@@ -147,14 +151,17 @@ public static class NomadKuboEventStreamHandlerExtensions
     /// </summary>
     public static async IAsyncEnumerable<EventStreamEntry<Cid>> AdvanceEventStreamToAtLeastAsync<TEventStreamEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventStreamEntryContent> eventStreamHandler, DateTime maxDateTimeUtc, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        Guard.IsNotNull(eventStreamHandler);
+        
         // Playback event stream
         // Order event entries by oldest first
         await foreach (var eventEntry in eventStreamHandler.ResolveEventStreamEntriesAsync(cancellationToken)
-                           .OrderBy(x => x.TimestampUtc)
                            .Where(x => (x.TimestampUtc ?? ThrowHelper.ThrowArgumentNullException<DateTime>()) <= maxDateTimeUtc)
-                           .WithCancellation(cancellationToken))
+                           .OrderBy(x => x.TimestampUtc)
+                           .WithCancellation(cancellationToken)
+                       )
         {
-            // Advance event stream for all listening objects
+            Guard.IsNotNull(eventEntry);
             await eventStreamHandler.TryAdvanceEventStreamAsync(eventEntry, cancellationToken);
             yield return eventEntry;
         }
@@ -206,11 +213,14 @@ public static class NomadKuboEventStreamHandlerExtensions
             {
                 Guard.IsNotNullOrWhiteSpace(entryCid);
                 var entry = await eventStreamHandler.ResolveContentPointerAsync<EventStreamEntry<Cid>, TEventStreamEntryContent>(entryCid, cancellationToken);
+                Guard.IsNotNull(entry);
                 entriesDict[entryCid] = entry;
-
+                
+                if (entry.Content is null)
+                    throw new ArgumentNullException(nameof(entry.Content), $"{nameof(entry.Content)} was unexpectedly null on {entryCid}");
+                
                 Guard.IsNotNullOrWhiteSpace(entry.TargetId);
                 Guard.IsNotNullOrWhiteSpace(entry.EventId);
-                Guard.IsNotNullOrWhiteSpace(entry.Content);
 
                 if (entry.TargetId != eventStreamHandler.Id)
                 {
@@ -274,6 +284,7 @@ public static class NomadKuboEventStreamHandlerExtensions
 
             foreach (var entry in eventStreamEntries)
             {
+                Guard.IsNotNull(entry.Value);
                 Guard.IsNotNullOrWhiteSpace(entry.Value.Content);
                 Guard.IsNotNullOrWhiteSpace(entry.Value.EventId);
                 Guard.IsNotNullOrWhiteSpace(entry.Value.TargetId);
