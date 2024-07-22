@@ -23,7 +23,7 @@ public static class NomadKuboEventStreamHandlerExtensions
     public static async Task<TResult> ResolveContentPointerAsync<TResult, TEventEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventEntryContent> handler, Cid cid, CancellationToken ctk)
     {
         var resolved = await handler.Client.ResolveDagCidAsync<TResult>(cid, nocache: !handler.KuboOptions.UseCache, ctk);
-        Guard.IsNotNull(resolved.Result);        
+        Guard.IsNotNull(resolved.Result);
         return resolved.Result;
     }
 
@@ -41,7 +41,7 @@ public static class NomadKuboEventStreamHandlerExtensions
 
         return roamingContent.Sources;
     }
-    
+
     /// <summary>
     /// Publishes the inner content to the roaming ipns key on <paramref name="eventStreamHandler"/>.
     /// </summary>
@@ -129,10 +129,14 @@ public static class NomadKuboEventStreamHandlerExtensions
     /// </summary>
     public static async IAsyncEnumerable<EventStreamEntry<Cid>> AdvanceSharedEventStreamAsync<TEventStreamEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventStreamEntryContent> eventStreamHandler, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        Guard.IsNotNull(eventStreamHandler);
+
         // Playback event stream
         // Order event entries by oldest first
         await foreach (var eventEntry in eventStreamHandler.ResolveEventStreamEntriesAsync(cancellationToken).OrderBy(x => x.TimestampUtc))
         {
+            Guard.IsNotNull(eventEntry);
+
             // Advance event stream for all listening objects
             await eventStreamHandler.ListeningEventStreamHandlers
                 .Where(x => x.Id == eventEntry.TargetId)
@@ -147,14 +151,17 @@ public static class NomadKuboEventStreamHandlerExtensions
     /// </summary>
     public static async IAsyncEnumerable<EventStreamEntry<Cid>> AdvanceEventStreamToAtLeastAsync<TEventStreamEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventStreamEntryContent> eventStreamHandler, DateTime maxDateTimeUtc, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        Guard.IsNotNull(eventStreamHandler);
+
         // Playback event stream
         // Order event entries by oldest first
         await foreach (var eventEntry in eventStreamHandler.ResolveEventStreamEntriesAsync(cancellationToken)
-                           .OrderBy(x => x.TimestampUtc)
                            .Where(x => (x.TimestampUtc ?? ThrowHelper.ThrowArgumentNullException<DateTime>()) <= maxDateTimeUtc)
-                           .WithCancellation(cancellationToken))
+                           .OrderBy(x => x.TimestampUtc)
+                           .WithCancellation(cancellationToken)
+                       )
         {
-            // Advance event stream for all listening objects
+            Guard.IsNotNull(eventEntry);
             await eventStreamHandler.TryAdvanceEventStreamAsync(eventEntry, cancellationToken);
             yield return eventEntry;
         }
@@ -178,15 +185,19 @@ public static class NomadKuboEventStreamHandlerExtensions
         var removedSources = new HashSet<Cid>();
 
         var queue = new Queue<KeyValuePair<Cid, Dictionary<Cid, EventStreamEntry<Cid>>>>(sourceEvents);
-        while (queue.Count > 0 && queue.Dequeue() is var currentSourceKvp)
+        while (queue.Count > 0 && queue.Dequeue() is var sourceKvp)
         {
             // Resolve event stream for each source
-            var sourceCid = currentSourceKvp.Key;
-            var eventStream = await eventStreamHandler.ResolveContentPointerAsync<EventStream<Cid>, TEventStreamEntryContent>(sourceCid, cancellationToken);
+            var sourceCid = sourceKvp.Key;
+            Guard.IsNotNullOrWhiteSpace(sourceCid);
 
-            if (removedSources.Contains(currentSourceKvp.Key))
+            var eventStream = await eventStreamHandler.ResolveContentPointerAsync<EventStream<Cid>, TEventStreamEntryContent>(sourceCid, cancellationToken);
+            Guard.IsNotNullOrWhiteSpace(eventStream.TargetId);
+            Guard.IsNotNullOrWhiteSpace(eventStreamHandler.Id);
+
+            if (removedSources.Contains(sourceCid))
             {
-                Logger.LogWarning($"Source {currentSourceKvp.Key} was marked as removed and has been skipped. It will not be resolved unless it is re-added.");
+                Logger.LogWarning($"Source {sourceCid} was marked as removed and has been skipped. It will not be resolved unless it is re-added.");
                 continue;
             }
 
@@ -197,11 +208,19 @@ public static class NomadKuboEventStreamHandlerExtensions
             }
 
             // Resolve and collect event stream entries
-            var entriesDict = currentSourceKvp.Value;
+            var entriesDict = sourceKvp.Value;
             foreach (var entryCid in eventStream.Entries)
             {
+                Guard.IsNotNullOrWhiteSpace(entryCid);
                 var entry = await eventStreamHandler.ResolveContentPointerAsync<EventStreamEntry<Cid>, TEventStreamEntryContent>(entryCid, cancellationToken);
+                Guard.IsNotNull(entry);
                 entriesDict[entryCid] = entry;
+
+                if (entry.Content is null)
+                    throw new ArgumentNullException(nameof(entry.Content), $"{nameof(entry.Content)} was unexpectedly null on {entryCid}");
+
+                Guard.IsNotNullOrWhiteSpace(entry.TargetId);
+                Guard.IsNotNullOrWhiteSpace(entry.EventId);
 
                 if (entry.TargetId != eventStreamHandler.Id)
                 {
@@ -213,32 +232,54 @@ public static class NomadKuboEventStreamHandlerExtensions
                 if (entry.EventId == nameof(SourceAddEvent))
                 {
                     var sourceAddEvent = await eventStreamHandler.ResolveContentPointerAsync<SourceAddEvent, TEventStreamEntryContent>(entry.Content, cancellationToken);
+                    Guard.IsNotNullOrWhiteSpace(sourceAddEvent.AddedSourcePointer);
+                    Guard.IsNotNullOrWhiteSpace(sourceAddEvent.EventId);
+                    Guard.IsNotNullOrWhiteSpace(sourceAddEvent.TargetId);
 
                     // Add to handler
-                    if (!eventStreamHandler.Sources.Contains(sourceAddEvent.AddedSourcePointer))
+                    if (eventStreamHandler.Sources.All(x => x != sourceAddEvent.AddedSourcePointer))
+                    {
                         eventStreamHandler.Sources.Add(sourceAddEvent.AddedSourcePointer);
+                        Logger.LogInformation($"Added source {sourceAddEvent.AddedSourcePointer} to event stream handler {eventStreamHandler.Id}");
+                    }
 
                     // Add to queue
                     var newKvp = new KeyValuePair<Cid, Dictionary<Cid, EventStreamEntry<Cid>>>(sourceAddEvent.AddedSourcePointer, []);
-                    queue.Enqueue(newKvp);
-                    sourceEvents.Add(newKvp.Key, newKvp.Value);
+
+                    if (queue.All(x => x.Key != newKvp.Key))
+                        queue.Enqueue(newKvp);
+
+                    if (!sourceEvents.ContainsKey(newKvp.Key))
+                        sourceEvents.Add(newKvp.Key, newKvp.Value);
+
+                    Logger.LogInformation($"Enqueued new source {newKvp.Key} for entry resolution");
 
                     // Unmark as removed if needed
-                    if (removedSources.Contains(sourceAddEvent.AddedSourcePointer))
+                    if (removedSources.Any(x => x == sourceAddEvent.AddedSourcePointer))
+                    {
                         removedSources.Remove(sourceAddEvent.AddedSourcePointer);
+                        Logger.LogInformation($"Unmarked source {sourceAddEvent.AddedSourcePointer} as removed {eventStreamHandler.Id}");
+                    }
                 }
                 // Removed source
                 else if (entry.EventId == nameof(SourceRemoveEvent))
                 {
                     var sourceRemoveEvent = await eventStreamHandler.ResolveContentPointerAsync<SourceRemoveEvent, TEventStreamEntryContent>(entry.Content, cancellationToken);
+                    Guard.IsNotNullOrWhiteSpace(sourceRemoveEvent.RemovedSourcePointer);
+                    Guard.IsNotNullOrWhiteSpace(sourceRemoveEvent.EventId);
+                    Guard.IsNotNullOrWhiteSpace(sourceRemoveEvent.TargetId);
 
                     if (eventStreamHandler.Sources.Contains(sourceRemoveEvent.RemovedSourcePointer))
+                    {
+                        Logger.LogInformation($"Removed source {sourceRemoveEvent.RemovedSourcePointer} from event stream handler {eventStreamHandler.Id}");
                         eventStreamHandler.Sources.Remove(sourceRemoveEvent.RemovedSourcePointer);
+                    }
 
                     // Don't want to re-resolve if source is re-added
                     // Rather than removing the event stream source and entries,
                     // mark as 'removed' and don't yield.
                     removedSources.Add(sourceRemoveEvent.RemovedSourcePointer);
+                    Logger.LogInformation($"Marked source {sourceRemoveEvent.RemovedSourcePointer} as removed {eventStreamHandler.Id}");
                 }
             }
         }
@@ -248,6 +289,7 @@ public static class NomadKuboEventStreamHandlerExtensions
         {
             var sourceCid = eventDataKvp.Key;
             var eventStreamEntries = eventDataKvp.Value;
+            Guard.IsNotNullOrWhiteSpace(sourceCid);
 
             // Exclude removed (not re-added) sources
             if (removedSources.Contains(sourceCid))
@@ -258,7 +300,13 @@ public static class NomadKuboEventStreamHandlerExtensions
 
             foreach (var entry in eventStreamEntries)
             {
-                yield return entry.Value;
+                Guard.IsNotNull(entry.Value);
+                Guard.IsNotNullOrWhiteSpace(entry.Value.Content);
+                Guard.IsNotNullOrWhiteSpace(entry.Value.EventId);
+                Guard.IsNotNullOrWhiteSpace(entry.Value.TargetId);
+
+                if (entry.Value.EventId != nameof(SourceAddEvent) && entry.Value.EventId != nameof(SourceRemoveEvent))
+                    yield return entry.Value;
             }
         }
     }
