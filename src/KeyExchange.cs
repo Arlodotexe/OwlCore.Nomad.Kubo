@@ -40,15 +40,6 @@ public static class KeyExchange
         
         if (isReceiver)
         {
-            // Enable room heartbeat to signal room join.
-            peerRoom.HeartbeatEnabled = true;
-            
-            // Joiners should be ready to receive, wait for join and send.
-            _ = await peerRoom.WaitForJoinAsync(cancellationToken);
-            await KeyExchange.SendRoamingKeyAsync(peerRoom, kuboBootstrapper, roamingKeyName, cancellationToken);
-        }
-        else
-        {
             // Receiver must be ready to receive before joining room.
             var receivedKeyTask = KeyExchange.ReceiveRoamingKeyAsync(peerRoom, kuboBootstrapper, roamingKeyName, client, kuboOptions, cancellationToken);
             
@@ -57,6 +48,15 @@ public static class KeyExchange
             peerRoom.HeartbeatEnabled = true;
             
             await receivedKeyTask;
+        }
+        else
+        {
+            // Enable room heartbeat to signal room join.
+            peerRoom.HeartbeatEnabled = true;
+            
+            // Joiners should be ready to receive, wait for join and send.
+            _ = await peerRoom.WaitForJoinAsync(cancellationToken);
+            await KeyExchange.SendRoamingKeyAsync(peerRoom, kuboBootstrapper, roamingKeyName, cancellationToken);
         }
     }
 
