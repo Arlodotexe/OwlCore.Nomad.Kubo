@@ -4,6 +4,7 @@ using Ipfs;
 using Ipfs.CoreApi;
 using OwlCore.Diagnostics;
 using OwlCore.Kubo;
+using OwlCore.Kubo.Extensions;
 using OwlCore.Nomad.Kubo.Events;
 using OwlCore.Storage;
 using OwlCore.Storage.System.IO;
@@ -18,6 +19,92 @@ namespace OwlCore.Nomad.Kubo;
 /// </remarks>
 public static class KeyExchange
 {
+    /// <summary>
+    /// Initiates a roaming key exchange using the provided peer room.
+    /// </summary>
+    /// <remarks>
+    /// It's HIGHLY recommended to use an encryption pubsub layer for your peer room. 
+    /// </remarks>
+    /// <param name="peerRoom">The room to perform the exchange in.</param>
+    /// <param name="roamingKeyName">The name to use for the imported roaming key.</param>
+    /// <param name="isReceiver">When true, this method will act as the receiver. When false, this method will act as the sender.</param>
+    /// <param name="kuboBootstrapper">The bootstrapper to use when importing or exporting the roaming key.</param>
+    /// <param name="kuboOptions">Options for data published to ipfs.</param>
+    /// <param name="client">The client to use for communicating with ipfs.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    public static async Task ExchangeRoamingKeyAsync(PeerRoom peerRoom, string roamingKeyName, bool isReceiver, KuboBootstrapper kuboBootstrapper, KuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    {
+        peerRoom.HeartbeatEnabled = false;
+        peerRoom.HeartbeatMessage = roamingKeyName;
+        await peerRoom.PruneStalePeersAsync(cancellationToken);
+        
+        if (isReceiver)
+        {
+            // Enable room heartbeat to signal room join.
+            peerRoom.HeartbeatEnabled = true;
+            
+            // Joiners should be ready to receive, wait for join and send.
+            _ = await peerRoom.WaitForJoinAsync(cancellationToken);
+            await KeyExchange.SendRoamingKeyAsync(peerRoom, kuboBootstrapper, roamingKeyName, cancellationToken);
+        }
+        else
+        {
+            // Receiver must be ready to receive before joining room.
+            var receivedKeyTask = KeyExchange.ReceiveRoamingKeyAsync(peerRoom, kuboBootstrapper, roamingKeyName, client, kuboOptions, cancellationToken);
+            
+            // Enable room heartbeat to signal room join.
+            _ = await peerRoom.WaitForJoinAsync(cancellationToken);
+            peerRoom.HeartbeatEnabled = true;
+            
+            await receivedKeyTask;
+        }
+    }
+
+    /// <summary>
+    /// Initiates a local source exchange using the provided peer room.
+    /// </summary>
+    /// <remarks>
+    /// It's HIGHLY recommended to use an encryption pubsub layer for your peer room. 
+    /// </remarks>
+    /// <param name="peerRoom"></param>
+    /// <param name="localKeyName">The name of the local key to use when importing or exporting.</param>
+    /// <param name="roamingKeyName">The name to use for the imported roaming key.</param>
+    /// <param name="isReceiver">When true, this method will act as the receiver. When false, this method will act as the sender.</param>
+    /// <param name="kuboOptions">Options for data published to ipfs.</param>
+    /// <param name="client">The client to use for communicating with ipfs.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    public static async Task ExchangeLocalSourceAsync(PeerRoom peerRoom, string localKeyName, string roamingKeyName, bool isReceiver, KuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    {
+        peerRoom.HeartbeatEnabled = false;
+        peerRoom.HeartbeatMessage = localKeyName;
+        await peerRoom.PruneStalePeersAsync(cancellationToken);
+        
+        // Load roaming/local keys
+        var keys = await client.Key.ListAsync(cancellationToken);
+        var roamingKey = keys.ToArray().First(x => x.Name == roamingKeyName);
+        var localSourceKey = await client.GetOrCreateKeyAsync(localKeyName, _ => new EventStream<Cid> { Entries = [], TargetId = roamingKey.Id, Label = "Peer swarm"}, kuboOptions.IpnsLifetime, 4096, cancellationToken);
+        
+        if (isReceiver)
+        {
+            // Receiver must be ready to receive before joining room.
+            var receivedKeyTask = KeyExchange.ReceiveLocalKeyAsync(peerRoom, roamingKey.Id, localSourceKey.Id, localKeyName, kuboOptions, client, cancellationToken);
+            
+            // Enable room heartbeat to signal room join.
+            _ = await peerRoom.WaitForJoinAsync(cancellationToken);
+            peerRoom.HeartbeatEnabled = true;
+            
+            await receivedKeyTask;
+        }
+        else
+        {
+            // Enable room heartbeat to signal room join.
+            peerRoom.HeartbeatEnabled = true;
+            
+            _ = await peerRoom.WaitForJoinAsync(cancellationToken);
+            await KeyExchange.SendLocalSourceAsync(peerRoom, localSourceKey.Id, cancellationToken);
+        }
+    }
+    
     /// <summary>
     /// Publishes the provided source key to the peer room.
     /// </summary>
@@ -41,10 +128,10 @@ public static class KeyExchange
     /// <param name="roamingKeyId">The roaming key that this source is being added to.</param>
     /// <param name="localKeyId">A resolvable id for the local event stream to append.</param>
     /// <param name="localKeyName">The name of the local key to update.</param>
-    /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
+    /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task ReceiveLocalKeyAsync(PeerRoom room, Cid roamingKeyId, Cid localKeyId, string localKeyName, ICoreApi client, KuboOptions kuboOptions, CancellationToken cancellationToken)
+    public static async Task ReceiveLocalKeyAsync(PeerRoom room, Cid roamingKeyId, Cid localKeyId, string localKeyName, KuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
     {
         var taskCompletionSource = new TaskCompletionSource<object?>();
 
