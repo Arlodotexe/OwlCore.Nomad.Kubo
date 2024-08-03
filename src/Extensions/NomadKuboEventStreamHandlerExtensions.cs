@@ -220,7 +220,7 @@ public static class NomadKuboEventStreamHandlerExtensions
                 continue;
             }
 
-            if (allowMismatchedEventStreamTargetId && eventStream.TargetId != eventStreamHandler.Id)
+            if (!allowMismatchedEventStreamTargetId && eventStream.TargetId != eventStreamHandler.Id)
             {
                 Logger.LogWarning($"Event stream {nameof(eventStream.TargetId)} {eventStream.TargetId} does not match event stream handler Id {eventStreamHandler.Id}, skipping");
                 continue;
