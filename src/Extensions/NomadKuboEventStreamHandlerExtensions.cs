@@ -66,7 +66,7 @@ public static class NomadKuboEventStreamHandlerExtensions
     /// <param name="ipnsLifetime">The ipns lifetime for the published key to be valid for. Node must be online at least once per this interval of time for the published ipns key to stay in the dht.</param>
     /// <param name="getDefaultEventStream">Gets the default event stream type when needed for creation.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task AppendNewEntryAsync<TEventEntryContent>(
+    public static async Task<EventStreamEntry<Cid>> AppendNewEntryAsync<TEventEntryContent>(
         this IModifiableNomadKuboEventStreamHandler<TEventEntryContent> eventStreamHandler,
         TEventEntryContent updateEventContent, string eventId, TimeSpan ipnsLifetime, Func<EventStream<Cid>> getDefaultEventStream,
         CancellationToken cancellationToken)
@@ -106,6 +106,8 @@ public static class NomadKuboEventStreamHandlerExtensions
         _ = await eventStreamHandler.Client.Name.PublishAsync(updatedEventStreamDagCid,
             key: eventStreamHandler.LocalEventStreamKeyName, lifetime: eventStreamHandler.KuboOptions.IpnsLifetime,
             cancellationToken);
+
+        return newEventStreamEntry;
     }
 
     /// <summary>

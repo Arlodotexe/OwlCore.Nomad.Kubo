@@ -15,13 +15,17 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.6.0</Version>
+		<Version>0.6.1</Version>
 		<Product>OwlCore</Product>
 		<Description>Shared tooling for building Nomad-enabled applications on ipfs</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.6.1 ---
+[Improvements]
+NomadKuboEventStreamHandlerExtensions.AppendNewEntryAsync now returns Task{EventStreamEntry{Cid}} instead of Task.
+
 --- 0.6.0 ---
 [Breaking]
 Inherited and implemented breaking changes from OwlCore.Nomad 0.6.0.
