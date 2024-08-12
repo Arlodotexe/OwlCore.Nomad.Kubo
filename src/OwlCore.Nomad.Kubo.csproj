@@ -15,13 +15,21 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.7.1</Version>
+		<Version>0.8.0</Version>
 		<Product>OwlCore</Product>
 		<Description>Shared tooling for building Nomad-enabled applications on ipfs</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.8.0 ---
+[Breaking]
+Inherited and implemented breaking changes from OwlCore.Nomad 0.7.0.
+Removed NomadKuboEventStreamHandlerExtensions.AdvanceSharedEventStreamAsync.
+Removed allowMismatchedEventStreamTargetId parameter from extension methods for ResolveEventStreamEntriesAsync, AdvanceSharedEventStreamAsync and AdvanceEventStreamToAtLeastAsync. As of OwlCore.Nomad 0.7.0, IHasId has been replaced with a more specific IEventStreamHandler.EventStreamId.
+NomadKuboEventStreamHandlerExtensions.ResolveEventStreamEntriesAsync no longer skips mismatched EventStreamEntry.TargetId and IEventStreamHandler.Id. 
+NomadKuboEventStreamHandlerExtensions.ResolveEventStreamEntriesAsync will always skip a mismatched EventStream.TargetId / IEventStreamHandler.EventStreamId.
+
 --- 0.7.1 ---
 [Fixed]
 Fixed an issue where allowMismatchedEventStreamTargetId was flipped internally.
@@ -129,7 +137,7 @@ Initial release of OwlCore.Nomad.Kubo.
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
 		<PackageReference Include="OwlCore.Kubo" Version="0.17.1" />
-    	<PackageReference Include="OwlCore.Nomad" Version="0.6.0" />
+    	<PackageReference Include="OwlCore.Nomad" Version="0.7.0" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

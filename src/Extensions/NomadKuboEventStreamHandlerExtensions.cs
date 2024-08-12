@@ -87,7 +87,7 @@ public static class NomadKuboEventStreamHandlerExtensions
         // Create new nomad event stream entry
         var newEventStreamEntry = new EventStreamEntry<Cid>
         {
-            TargetId = eventStreamHandler.Id,
+            TargetId = eventStreamHandler.EventStreamId,
             EventId = eventId,
             TimestampUtc = DateTime.UtcNow,
             Content = updateEventDagCid,
@@ -125,59 +125,26 @@ public static class NomadKuboEventStreamHandlerExtensions
         return streamEntry;
     }
 
-
-    /// <summary>
-    /// Resolves the full event stream from all sources organized by date, advancing all listening <see cref="ISharedEventStreamHandler{TContentPointer,TEventStreamSource,TEventStreamEntry,TListeningHandlers}.ListeningEventStreamHandlers"/> on the given <paramref name="eventStreamHandler"/> using data from all available <see cref="ISources{TEventStreamSource}.Sources"/>.
-    /// </summary>
-    /// <param name="eventStreamHandler">The event stream handler whose sources are resolved to crawl for event stream entries.</param>
-    /// <param name="allowMismatchedEventStreamTargetId">
-    /// When false, the provided <paramref name="eventStreamHandler"/> Id must match the resolved <see cref="EventStream{TEventEntryContent}.TargetId"/>.
-    /// For scenarios where child instances are all backed by events in the same event stream as the root, but might not share an id with it.
-    /// </param>
-    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async IAsyncEnumerable<EventStreamEntry<Cid>> AdvanceSharedEventStreamAsync<TEventStreamEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventStreamEntryContent> eventStreamHandler, bool allowMismatchedEventStreamTargetId = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        Guard.IsNotNull(eventStreamHandler);
-
-        // Playback event stream
-        // Order event entries by oldest first
-        await foreach (var eventEntry in eventStreamHandler.ResolveEventStreamEntriesAsync(allowMismatchedEventStreamTargetId, cancellationToken).OrderBy(x => x.TimestampUtc))
-        {
-            Guard.IsNotNull(eventEntry);
-
-            // Advance event stream for all listening objects
-            await eventStreamHandler.ListeningEventStreamHandlers
-                .Where(x => x.Id == eventEntry.TargetId)
-                .InParallel(x => x.TryAdvanceEventStreamAsync(eventEntry, cancellationToken));
-
-            yield return eventEntry;
-        }
-    }
-
     /// <summary>
     /// Resolves the full event stream from all <see cref="ISources{T}.Sources"/> organized by date and advances the <paramref name="eventStreamHandler"/> to the given <paramref name="maxDateTimeUtc"/>.
     /// </summary>
     /// <param name="eventStreamHandler">The event stream handler whose sources are resolved to crawl for event stream entries.</param>
     /// <param name="maxDateTimeUtc">The max datetime to advance the stream to.</param>
-    /// <param name="allowMismatchedEventStreamTargetId">
-    /// When false, the provided <paramref name="eventStreamHandler"/> Id must match the resolved <see cref="EventStream{TEventEntryContent}.TargetId"/>.
-    /// For scenarios where child instances are all backed by events in the same event stream as the root, but might not share an id with it.
-    /// </param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async IAsyncEnumerable<EventStreamEntry<Cid>> AdvanceEventStreamToAtLeastAsync<TEventStreamEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventStreamEntryContent> eventStreamHandler, DateTime maxDateTimeUtc, bool allowMismatchedEventStreamTargetId = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public static async IAsyncEnumerable<EventStreamEntry<Cid>> AdvanceEventStreamToAtLeastAsync<TEventStreamEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventStreamEntryContent> eventStreamHandler, DateTime maxDateTimeUtc, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         Guard.IsNotNull(eventStreamHandler);
 
         // Playback event stream
         // Order event entries by oldest first
-        await foreach (var eventEntry in eventStreamHandler.ResolveEventStreamEntriesAsync(allowMismatchedEventStreamTargetId, cancellationToken)
+        await foreach (var eventEntry in eventStreamHandler.ResolveEventStreamEntriesAsync(cancellationToken)
                            .Where(x => (x.TimestampUtc ?? ThrowHelper.ThrowArgumentNullException<DateTime>()) <= maxDateTimeUtc)
                            .OrderBy(x => x.TimestampUtc)
                            .WithCancellation(cancellationToken)
                        )
         {
             Guard.IsNotNull(eventEntry);
-            await eventStreamHandler.TryAdvanceEventStreamAsync(eventEntry, cancellationToken);
+            await eventStreamHandler.AdvanceEventStreamAsync(eventEntry, cancellationToken);
             yield return eventEntry;
         }
     }
@@ -186,12 +153,8 @@ public static class NomadKuboEventStreamHandlerExtensions
     /// Resolves the full event stream from all sources, organized by date.
     /// </summary>
     /// <param name="eventStreamHandler">The event stream handler whose sources are resolved to crawl for event stream entries.</param>
-    /// <param name="allowMismatchedEventStreamTargetId">
-    /// When false, the provided <paramref name="eventStreamHandler"/> Id must match the resolved <see cref="EventStream{TEventEntryContent}.TargetId"/>.
-    /// For scenarios where child instances are all backed by events in the same event stream as the root, but might not share an id with it.
-    /// </param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async IAsyncEnumerable<EventStreamEntry<Cid>> ResolveEventStreamEntriesAsync<TEventStreamEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventStreamEntryContent> eventStreamHandler, bool allowMismatchedEventStreamTargetId = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public static async IAsyncEnumerable<EventStreamEntry<Cid>> ResolveEventStreamEntriesAsync<TEventStreamEntryContent>(this IReadOnlyNomadKuboEventStreamHandler<TEventStreamEntryContent> eventStreamHandler, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         // Resolve initial sources
         var sourceEvents = new Dictionary<Cid, Dictionary<Cid, EventStreamEntry<Cid>>>();
@@ -212,7 +175,7 @@ public static class NomadKuboEventStreamHandlerExtensions
 
             var eventStream = await eventStreamHandler.ResolveContentPointerAsync<EventStream<Cid>, TEventStreamEntryContent>(sourceCid, cancellationToken);
             Guard.IsNotNullOrWhiteSpace(eventStream.TargetId);
-            Guard.IsNotNullOrWhiteSpace(eventStreamHandler.Id);
+            Guard.IsNotNullOrWhiteSpace(eventStreamHandler.EventStreamId);
 
             if (removedSources.Contains(sourceCid))
             {
@@ -220,9 +183,9 @@ public static class NomadKuboEventStreamHandlerExtensions
                 continue;
             }
 
-            if (!allowMismatchedEventStreamTargetId && eventStream.TargetId != eventStreamHandler.Id)
+            if (eventStream.TargetId != eventStreamHandler.EventStreamId)
             {
-                Logger.LogWarning($"Event stream {nameof(eventStream.TargetId)} {eventStream.TargetId} does not match event stream handler Id {eventStreamHandler.Id}, skipping");
+                Logger.LogWarning($"Event stream {nameof(eventStream.TargetId)} {eventStream.TargetId} does not match event stream handler Id {eventStreamHandler.EventStreamId}, skipping");
                 continue;
             }
 
@@ -241,12 +204,6 @@ public static class NomadKuboEventStreamHandlerExtensions
                 Guard.IsNotNullOrWhiteSpace(entry.TargetId);
                 Guard.IsNotNullOrWhiteSpace(entry.EventId);
 
-                if (entry.TargetId != eventStreamHandler.Id)
-                {
-                    Logger.LogWarning($"Event stream entry {nameof(entry.TargetId)} {entry.TargetId} does not match event handler Id {eventStreamHandler.Id}, skipping");
-                    continue;
-                }
-
                 // Added source
                 if (entry.EventId == nameof(SourceAddEvent))
                 {
@@ -259,7 +216,7 @@ public static class NomadKuboEventStreamHandlerExtensions
                     if (eventStreamHandler.Sources.All(x => x != sourceAddEvent.AddedSourcePointer))
                     {
                         eventStreamHandler.Sources.Add(sourceAddEvent.AddedSourcePointer);
-                        Logger.LogInformation($"Added source {sourceAddEvent.AddedSourcePointer} to event stream handler {eventStreamHandler.Id}");
+                        Logger.LogInformation($"Added source {sourceAddEvent.AddedSourcePointer} to event stream handler {eventStreamHandler.EventStreamId}");
                     }
 
                     // Add to queue
@@ -277,7 +234,7 @@ public static class NomadKuboEventStreamHandlerExtensions
                     if (removedSources.Any(x => x == sourceAddEvent.AddedSourcePointer))
                     {
                         removedSources.Remove(sourceAddEvent.AddedSourcePointer);
-                        Logger.LogInformation($"Unmarked source {sourceAddEvent.AddedSourcePointer} as removed {eventStreamHandler.Id}");
+                        Logger.LogInformation($"Unmarked source {sourceAddEvent.AddedSourcePointer} as removed {eventStreamHandler.EventStreamId}");
                     }
                 }
                 // Removed source
@@ -290,7 +247,7 @@ public static class NomadKuboEventStreamHandlerExtensions
 
                     if (eventStreamHandler.Sources.Contains(sourceRemoveEvent.RemovedSourcePointer))
                     {
-                        Logger.LogInformation($"Removed source {sourceRemoveEvent.RemovedSourcePointer} from event stream handler {eventStreamHandler.Id}");
+                        Logger.LogInformation($"Removed source {sourceRemoveEvent.RemovedSourcePointer} from event stream handler {eventStreamHandler.EventStreamId}");
                         eventStreamHandler.Sources.Remove(sourceRemoveEvent.RemovedSourcePointer);
                     }
 
@@ -298,7 +255,7 @@ public static class NomadKuboEventStreamHandlerExtensions
                     // Rather than removing the event stream source and entries,
                     // mark as 'removed' and don't yield.
                     removedSources.Add(sourceRemoveEvent.RemovedSourcePointer);
-                    Logger.LogInformation($"Marked source {sourceRemoveEvent.RemovedSourcePointer} as removed {eventStreamHandler.Id}");
+                    Logger.LogInformation($"Marked source {sourceRemoveEvent.RemovedSourcePointer} as removed {eventStreamHandler.EventStreamId}");
                 }
             }
         }

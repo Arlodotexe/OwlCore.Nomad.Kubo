@@ -12,7 +12,7 @@ public abstract class ReadOnlyNomadKuboEventStreamHandler<TEventEntryContent> : 
     /// <summary>
     /// Creates a new instance of <see cref="ReadOnlyNomadKuboEventStreamHandler{TEventEntryContent}"/>.
     /// </summary>
-    /// <param name="listeningEventStreamHandlers">A shared collection of all available event streams that should participate in playback of events using their respective <see cref="IEventStreamHandler{TEventStreamEntry}.TryAdvanceEventStreamAsync"/>. </param>
+    /// <param name="listeningEventStreamHandlers">A shared collection of all available event streams that should participate in playback of events using their respective <see cref="IEventStreamHandler{TEventStreamEntry}.AdvanceEventStreamAsync"/>. </param>
     protected ReadOnlyNomadKuboEventStreamHandler(ICollection<ISharedEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>> listeningEventStreamHandlers)
     {
         listeningEventStreamHandlers.Add(this);
@@ -26,7 +26,7 @@ public abstract class ReadOnlyNomadKuboEventStreamHandler<TEventEntryContent> : 
     public virtual required ICollection<Cid> Sources { get; init; }
 
     /// <inheritdoc />
-    public required string Id { get; init; }
+    public required string EventStreamId { get; init; }
 
     /// <inheritdoc />
     public required ICoreApi Client { get; set; }
@@ -38,7 +38,7 @@ public abstract class ReadOnlyNomadKuboEventStreamHandler<TEventEntryContent> : 
     public ICollection<ISharedEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>> ListeningEventStreamHandlers { get; set; }
 
     /// <inheritdoc />
-    public virtual async Task TryAdvanceEventStreamAsync(EventStreamEntry<Cid> streamEntry, CancellationToken cancellationToken)
+    public virtual async Task AdvanceEventStreamAsync(EventStreamEntry<Cid> streamEntry, CancellationToken cancellationToken)
     {
         var (result, _) = await Client.ResolveDagCidAsync<TEventEntryContent>(streamEntry.Content, nocache: false, cancellationToken);
         if (result is not null)
