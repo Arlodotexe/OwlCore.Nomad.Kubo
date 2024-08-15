@@ -66,28 +66,28 @@ public static class KeyExchange
     /// <remarks>
     /// It's HIGHLY recommended to use an encryption pubsub layer for your peer room. 
     /// </remarks>
-    /// <param name="peerRoom"></param>
-    /// <param name="localKeyName">The name of the local key to use when importing or exporting.</param>
+    /// <param name="peerRoom">The room to perform the exchange in.</param>
+    /// <param name="localKey">The local key for this node. If <paramref name="isReceiver"/> is false, this key will be sent, otherwise the received key will be added in a new <see cref="SourceAddEvent"/> to the event stream at this key.</param>
     /// <param name="roamingKeyName">The name to use for the imported roaming key.</param>
     /// <param name="isReceiver">When true, this method will act as the receiver. When false, this method will act as the sender.</param>
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
     /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task ExchangeLocalSourceAsync(PeerRoom peerRoom, string localKeyName, string roamingKeyName, bool isReceiver, KuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    public static async Task ExchangeLocalSourceAsync(PeerRoom peerRoom, IKey localKey, string roamingKeyName, bool isReceiver, KuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
     {
         peerRoom.HeartbeatEnabled = false;
-        peerRoom.HeartbeatMessage = localKeyName;
+        peerRoom.HeartbeatMessage = localKey.Name;
         await peerRoom.PruneStalePeersAsync(cancellationToken);
         
         // Load roaming/local keys
-        var keys = await client.Key.ListAsync(cancellationToken);
-        var roamingKey = keys.ToArray().First(x => x.Name == roamingKeyName);
-        var localSourceKey = await client.GetOrCreateKeyAsync(localKeyName, _ => new EventStream<Cid> { Entries = [], TargetId = roamingKey.Id, Label = "Peer swarm"}, kuboOptions.IpnsLifetime, 4096, cancellationToken);
+        var enumerable = await client.Key.ListAsync(cancellationToken);
+        var keys = enumerable as IKey[] ?? enumerable.ToArray();
+        var roamingKey = keys.First(x => x.Name == roamingKeyName);
         
         if (isReceiver)
         {
             // Receiver must be ready to receive before joining room.
-            var receivedKeyTask = KeyExchange.ReceiveLocalKeyAsync(peerRoom, roamingKey.Id, localSourceKey.Id, localKeyName, kuboOptions, client, cancellationToken);
+            var receivedKeyTask = KeyExchange.ReceiveLocalKeyAsync(peerRoom, roamingKey.Id, localKey.Id, localKey.Name, kuboOptions, client, cancellationToken);
             
             // Enable room heartbeat to signal room join.
             _ = await peerRoom.WaitForJoinAsync(cancellationToken);
@@ -101,7 +101,7 @@ public static class KeyExchange
             peerRoom.HeartbeatEnabled = true;
             
             _ = await peerRoom.WaitForJoinAsync(cancellationToken);
-            await KeyExchange.SendLocalSourceAsync(peerRoom, localSourceKey.Id, cancellationToken);
+            await KeyExchange.SendLocalSourceAsync(peerRoom, localKey.Id, cancellationToken);
         }
     }
     
