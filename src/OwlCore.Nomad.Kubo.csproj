@@ -15,13 +15,19 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.9.0</Version>
+		<Version>0.10.0</Version>
 		<Product>OwlCore</Product>
 		<Description>Shared tooling for building Nomad-enabled applications on ipfs</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.10.0 ---
+[Breaking]
+NomadKuboEventStreamHandlerExtensions.AppendNewEntryAsync was renamed to AppendEventStreamEntryAsync, now takes updateEventContentCid directly instead of serializing data to the Dag.
+NomadKuboEventStreamHandlerExtensions.AppendEventStreamEntryAsync no longer publishes data to ipns. Instead, it simply wraps in an EventStreamEntry, appends it to the handler, and returns the appended EventStreamEntry.
+NomadKuboEventStreamHandlerExtensions.AppendEventStreamEntryAsync now properly adds to handler.LocalEventStream.Entries and handler.AllEventStreamEntries.
+
 --- 0.9.0 ---
 [Breaking]
 Inherited and implemented breaking changes from OwlCore.Nomad 0.8.0.

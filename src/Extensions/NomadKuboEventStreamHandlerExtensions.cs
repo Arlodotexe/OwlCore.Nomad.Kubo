@@ -58,50 +58,47 @@ public static class NomadKuboEventStreamHandlerExtensions
     }
 
     /// <summary>
-    /// Appends a new event entry to the provided modifiable event stream handler.
+    /// A lock for <see cref="AppendEventStreamEntryAsync{T}"/>.
     /// </summary>
-    /// <param name="eventStreamHandler">The event stream handler to append the provided <paramref name="updateEventContent"/> to.</param>
-    /// <param name="updateEventContent">The content to include in the appended update event.</param>
-    /// <param name="eventId">A unique identifier for the event being applied.</param>
-    /// <param name="ipnsLifetime">The ipns lifetime for the published key to be valid for. Node must be online at least once per this interval of time for the published ipns key to stay in the dht.</param>
-    /// <param name="getDefaultEventStream">Gets the default event stream type when needed for creation.</param>
+    private static SemaphoreSlim AppendLock { get; } = new(1, 1);
+
+    /// <summary>
+    /// Appends a new event to the event stream.
+    /// </summary>
+    /// <param name="handler">The storage interface to operate on.</param>
+    /// <param name="updateEventContentCid">The CID to use for the content of this update event.</param>
+    /// <param name="eventId">A unique identifier for this event type.</param>
+    /// <param name="targetId">A unique identifier for the provided <paramref name="handler"/> that can be used to reapply the event later.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task<EventStreamEntry<Cid>> AppendNewEntryAsync<TEventEntryContent>(
-        this INomadKuboEventStreamHandler<TEventEntryContent> eventStreamHandler,
-        TEventEntryContent updateEventContent, string eventId, TimeSpan ipnsLifetime, Func<EventStream<Cid>> getDefaultEventStream,
-        CancellationToken cancellationToken)
-        where TEventEntryContent : notnull
+    /// <returns>A task containing the new event stream entry.</returns>
+    public static async Task<EventStreamEntry<Cid>> AppendEventStreamEntryAsync<T>(this INomadKuboEventStreamHandler<T> handler, Cid updateEventContentCid, string eventId, string targetId, CancellationToken cancellationToken)
     {
-        var (eventStream, _) = await eventStreamHandler.Client.ResolveDagCidAsync<EventStream<Cid>>(eventStreamHandler.LocalEventStreamKey.Id, nocache: !eventStreamHandler.KuboOptions.UseCache, cancellationToken);
-        Guard.IsNotNull(eventStream);
+        cancellationToken.ThrowIfCancellationRequested();
+        var client = handler.Client;
 
-        var updateEventDagCid = await eventStreamHandler.Client.Dag.PutAsync(updateEventContent,
-            pin: eventStreamHandler.KuboOptions.ShouldPin, cancel: cancellationToken);
-
-        // Create new nomad event stream entry
-        var newEventStreamEntry = new EventStreamEntry<Cid>
+        using (await AppendLock.DisposableWaitAsync(cancellationToken: cancellationToken))
         {
-            TargetId = eventStreamHandler.EventStreamHandlerId,
-            EventId = eventId,
-            TimestampUtc = DateTime.UtcNow,
-            Content = updateEventDagCid,
-        };
+            // Get local event stream.
+            cancellationToken.ThrowIfCancellationRequested();
 
-        var newEventStreamEntryDagCid = await eventStreamHandler.Client.Dag.PutAsync(newEventStreamEntry,
-            pin: eventStreamHandler.KuboOptions.ShouldPin, cancel: cancellationToken);
+            // Append the event to the local event stream.
+            var newEventStreamEntry = new EventStreamEntry<Cid>
+            {
+                TargetId = targetId,
+                EventId = eventId,
+                TimestampUtc = DateTime.UtcNow,
+                Content = updateEventContentCid,
+            };
 
-        // Add new event to event stream
-        eventStream.Entries.Add(newEventStreamEntryDagCid);
+            // Get new cid for new local event stream entry.
+            var newEventStreamEntryCid = await client.Dag.PutAsync(newEventStreamEntry, pin: handler.KuboOptions.ShouldPin, cancel: cancellationToken);
 
-        var updatedEventStreamDagCid = await eventStreamHandler.Client.Dag.PutAsync(eventStream,
-            pin: eventStreamHandler.KuboOptions.ShouldPin, cancel: cancellationToken);
-
-        // Publish updated event stream
-        _ = await eventStreamHandler.Client.Name.PublishAsync(updatedEventStreamDagCid,
-            key: eventStreamHandler.LocalEventStreamKey.Name, lifetime: eventStreamHandler.KuboOptions.IpnsLifetime,
-            cancellationToken);
-
-        return newEventStreamEntry;
+            // Add new entry cid to event stream content.
+            handler.LocalEventStream.Entries.Add(newEventStreamEntryCid);
+            handler.AllEventStreamEntries.Add(newEventStreamEntry);
+            
+            return newEventStreamEntry;
+        }
     }
 
     /// <summary>
