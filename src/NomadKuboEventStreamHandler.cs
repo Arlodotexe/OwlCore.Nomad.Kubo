@@ -7,26 +7,38 @@ namespace OwlCore.Nomad.Kubo;
 /// <summary>
 /// A read-only shared stream handler implementation.
 /// </summary>
-public abstract class ReadOnlyNomadKuboEventStreamHandler<TEventEntryContent> : IReadOnlyNomadKuboEventStreamHandler<TEventEntryContent>
+public abstract class NomadKuboEventStreamHandler<TEventEntryContent> : INomadKuboEventStreamHandler<TEventEntryContent>
 {
     /// <summary>
-    /// Creates a new instance of <see cref="ReadOnlyNomadKuboEventStreamHandler{TEventEntryContent}"/>.
+    /// Creates a new instance of <see cref="NomadKuboEventStreamHandler{TEventEntryContent}"/>.
     /// </summary>
-    /// <param name="listeningEventStreamHandlers">A shared collection of all available event streams that should participate in playback of events using their respective <see cref="IEventStreamHandler{TEventStreamEntry}.AdvanceEventStreamAsync"/>. </param>
-    protected ReadOnlyNomadKuboEventStreamHandler(ICollection<ISharedEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>> listeningEventStreamHandlers)
+    /// <param name="listeningEventStreamHandlers">A shared collection of all available event streams that should participate in playback of events using their respective <see cref="IEventStreamHandler{TContentPointer, TEventStream, TEventStreamEntry}.AdvanceEventStreamAsync"/>. </param>
+    protected NomadKuboEventStreamHandler(ICollection<ISharedEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>> listeningEventStreamHandlers)
     {
         listeningEventStreamHandlers.Add(this);
         ListeningEventStreamHandlers = listeningEventStreamHandlers;
     }
 
     /// <inheritdoc />
+    public required string EventStreamHandlerId { get; init; }
+
+    /// <inheritdoc />
     public EventStreamEntry<Cid>? EventStreamPosition { get; set; }
+
+    /// <inheritdoc />
+    public required ICollection<EventStreamEntry<Cid>> AllEventStreamEntries { get; set; }
+
+    /// <inheritdoc />
+    public required EventStream<Cid> LocalEventStream { get; set; }
 
     /// <inheritdoc />
     public virtual required ICollection<Cid> Sources { get; init; }
 
     /// <inheritdoc />
-    public required string EventStreamId { get; init; }
+    public required IKey LocalEventStreamKey { get; init; }
+
+    /// <inheritdoc />
+    public required IKey RoamingKey { get; init; }
 
     /// <inheritdoc />
     public required ICoreApi Client { get; set; }
@@ -46,6 +58,9 @@ public abstract class ReadOnlyNomadKuboEventStreamHandler<TEventEntryContent> : 
 
         EventStreamPosition = streamEntry;
     }
+    
+    /// <inheritdoc />
+    public abstract Task<EventStreamEntry<Cid>> AppendNewEntryAsync(TEventEntryContent updateEvent, CancellationToken cancellationToken = default);
 
     /// <inheritdoc />
     public abstract Task ResetEventStreamPositionAsync(CancellationToken cancellationToken);

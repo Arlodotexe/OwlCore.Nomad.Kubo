@@ -15,13 +15,21 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.8.0</Version>
+		<Version>0.9.0</Version>
 		<Product>OwlCore</Product>
 		<Description>Shared tooling for building Nomad-enabled applications on ipfs</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.9.0 ---
+[Breaking]
+Inherited and implemented breaking changes from OwlCore.Nomad 0.8.0.
+IModifiableNomadKuboEventStreamHandler IReadOnlyNomadKuboEventStreamHandler were combined into a single INomadKuboEventStreamHandler, like for their implementations. In Nomad, an event stream handler is only needed if you can modify the data, otherwise you'd simply resolve and parse the published roaming data.
+NomadKuboEventStreamHandlerExtensions now uses IKuboOptions instead of KuboOptions anywhere it was used.
+Implementations of INomadKuboEventStreamHandler now require supplying the RoamingKey and LocalEventStreamKey as IKey instead of the using the name. These keys must be present and instantiated before using the event stream.
+ExchangeLocalSourceAsync now takes an IKey instead of the key name. Added code comments.
+
 --- 0.8.0 ---
 [Breaking]
 Inherited and implemented breaking changes from OwlCore.Nomad 0.7.0.
@@ -136,8 +144,8 @@ Initial release of OwlCore.Nomad.Kubo.
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
-		<PackageReference Include="OwlCore.Kubo" Version="0.17.1" />
-    	<PackageReference Include="OwlCore.Nomad" Version="0.7.0" />
+		<PackageReference Include="OwlCore.Kubo" Version="0.17.2" />
+    	<PackageReference Include="OwlCore.Nomad" Version="0.8.0" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
