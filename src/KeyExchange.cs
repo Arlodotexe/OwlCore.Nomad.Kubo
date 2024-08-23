@@ -32,7 +32,7 @@ public static class KeyExchange
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
     /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task ExchangeRoamingKeyAsync(PeerRoom peerRoom, string roamingKeyName, bool isReceiver, KuboBootstrapper kuboBootstrapper, KuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    public static async Task ExchangeRoamingKeyAsync(PeerRoom peerRoom, string roamingKeyName, bool isReceiver, KuboBootstrapper kuboBootstrapper, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
     {
         peerRoom.HeartbeatEnabled = false;
         peerRoom.HeartbeatMessage = roamingKeyName;
@@ -73,7 +73,7 @@ public static class KeyExchange
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
     /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task ExchangeLocalSourceAsync(PeerRoom peerRoom, IKey localKey, string roamingKeyName, bool isReceiver, KuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    public static async Task ExchangeLocalSourceAsync(PeerRoom peerRoom, IKey localKey, string roamingKeyName, bool isReceiver, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
     {
         peerRoom.HeartbeatEnabled = false;
         peerRoom.HeartbeatMessage = localKey.Name;
@@ -131,7 +131,7 @@ public static class KeyExchange
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
     /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task ReceiveLocalKeyAsync(PeerRoom room, Cid roamingKeyId, Cid localKeyId, string localKeyName, KuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    public static async Task ReceiveLocalKeyAsync(PeerRoom room, Cid roamingKeyId, Cid localKeyId, string localKeyName, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
     {
         var taskCompletionSource = new TaskCompletionSource<object?>();
 
@@ -192,7 +192,7 @@ public static class KeyExchange
     /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task ReceiveRoamingKeyAsync(PeerRoom room, KuboBootstrapper kuboBootstrapper, string roamingKeyName, ICoreApi client, KuboOptions kuboOptions, CancellationToken cancellationToken)
+    public static async Task ReceiveRoamingKeyAsync(PeerRoom room, KuboBootstrapper kuboBootstrapper, string roamingKeyName, ICoreApi client, IKuboOptions kuboOptions, CancellationToken cancellationToken)
     {
         var taskCompletionSource = new TaskCompletionSource<object?>();
 
