@@ -15,13 +15,20 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.11.0</Version>
+		<Version>0.12.0</Version>
 		<Product>OwlCore</Product>
 		<Description>Shared tooling for building Nomad-enabled applications on ipfs</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.12.0 ---
+[Breaking]
+KeyExchange.PairWithEncryptedPubSubAsync now takes a delegate GetOrCreateLocalKeyFromRoamingAsync(IKey roamingKey, CancellationToken cancellationToken) instead of directly taking the local key. When an event stream is created, the roaming key must be set as the TargetId in the local key. Since the roaming key is imported during the pairing process, the local event stream must be created or updated with the imported key's id set as the EventStream{T}.TargetId. This delegate allows that to happen prior to local exchange.    
+
+[New]
+Added delegate GetOrCreateLocalKeyFromRoamingAsync.
+
 --- 0.11.0 ---
 [New]
 Added KeyExchange.PairWithEncryptedPubSubAsync, simplifying the pairing process into a one-line helper.

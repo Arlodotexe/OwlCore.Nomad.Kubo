@@ -12,6 +12,17 @@ using OwlCore.Storage.System.IO;
 namespace OwlCore.Nomad.Kubo;
 
 /// <summary>
+/// A delegate that, given a roaming key, gets or creates the corresponding local key containing an event stream.
+/// </summary>
+/// <remarks>
+/// The event stream in the returned local key should have a <see cref="EventStream{T}.TargetId"/> that matches the <paramref name="roamingKey"/>'s <see cref="IKey.Id"/>.
+/// </remarks>
+/// <param name="roamingKey">The roaming key to use to create the local key.</param>
+/// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+/// <returns></returns>
+public delegate Task<IKey> GetOrCreateLocalKeyFromRoamingAsync(IKey roamingKey, CancellationToken cancellationToken);
+
+/// <summary>
 /// Helpers for exchanging roaming and local Nomad ipns keys between nodes. 
 /// </summary>
 /// <remarks>
@@ -26,13 +37,13 @@ public static class KeyExchange
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
     /// <param name="client">A client that can be used for communicating with ipfs.</param>
     /// <param name="genericApi">A generic API that can supply peer information.</param>
-    /// <param name="localKey">The existing local key. This should be an event stream on both nodes. The node that receives the roaming key will send this local key in response, which will be picked up and added to this local key's event stream as a new source.</param>
+    /// <param name="getOrCreateLocalKeyAsync">The existing local key. This should be an event stream on both nodes. The node that receives the roaming key will send this local key in response, which will be picked up and added to this local key's event stream as a new source.</param>
     /// <param name="isRoamingReceiver">If true, this node will act as a roaming receiver / local sender, otherwise this node will act as a roaming sender / local receiver.</param>
     /// <param name="roamingKeyName">The name of the roaming key on this machine. If <paramref name="isRoamingReceiver"/> is true, this is the key name that the received key will be imported under and should not exist on this node yet. If false, the key should exist on this node.</param>
     /// <param name="roomName">The name of the pubsub room to join for pairing.</param>
     /// <param name="password">The password to use for encrypting and decrypting pubsub messages.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task PairWithEncryptedPubSubAsync(KuboBootstrapper kubo, IKuboOptions kuboOptions, ICoreApi client, IGenericApi genericApi, IKey localKey, bool isRoamingReceiver, string roamingKeyName, string roomName, string password, CancellationToken cancellationToken = default)
+    public static async Task PairWithEncryptedPubSubAsync(KuboBootstrapper kubo, IKuboOptions kuboOptions, ICoreApi client, IGenericApi genericApi, GetOrCreateLocalKeyFromRoamingAsync getOrCreateLocalKeyAsync, bool isRoamingReceiver, string roamingKeyName, string roomName, string password, CancellationToken cancellationToken = default)
     {
         // Setup encrypted pubsub
         var thisPeer = await genericApi.IdAsync(cancel: cancellationToken);
@@ -46,6 +57,15 @@ public static class KeyExchange
         // Roaming key must exist on the 'roaming sender' node, must not exist on 'roaming receiver' node.
         // The node that receives a roaming key should be a sender for local key, and vice versa.
         await KeyExchange.ExchangeRoamingKeyAsync(peerRoom, roamingKeyName, isReceiver: isRoamingReceiver, kubo, kuboOptions, client, cancellationToken);
+
+        var enumerable = await client.Key.ListAsync(cancellationToken);
+        var keys = enumerable as IKey[] ?? enumerable.ToArray();
+
+        var roamingKey = keys.FirstOrDefault(x => x.Name == roamingKeyName);
+        if (roamingKey is null)
+            throw new InvalidOperationException($"Roaming key {roamingKeyName} couldn't be found after import.");
+
+        var localKey = await getOrCreateLocalKeyAsync(roamingKey, cancellationToken);
 
         // The node that sends a roaming key should be receiver for local key, and vice versa.
         var isLocalReceiver = !isRoamingReceiver;
