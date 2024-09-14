@@ -12,7 +12,7 @@ using System.Runtime.CompilerServices;
 namespace OwlCore.Nomad.Kubo;
 
 /// <summary>
-/// Extension methods for <see cref="IModifiableNomadKuboEventStreamHandler{TEventEntryContent}"/>.
+/// Extension methods for <see cref="INomadKuboEventStreamHandler{TEventEntryContent}"/>.
 /// </summary>
 public static class NomadKuboEventStreamHandlerExtensions
 {

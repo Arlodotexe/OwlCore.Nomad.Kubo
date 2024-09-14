@@ -15,13 +15,18 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.12.0</Version>
+		<Version>0.12.1</Version>
 		<Product>OwlCore</Product>
 		<Description>Shared tooling for building Nomad-enabled applications on ipfs</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.12.1 ---
+[Fixes]
+Inherited fixes from OwlCore.ComponentModel 0.9.1.
+Inherited fixes and improvements from OwlCore.Kubo 0.19.0 and transient dependencies.
+
 --- 0.12.0 ---
 [Breaking]
 KeyExchange.PairWithEncryptedPubSubAsync now takes a delegate GetOrCreateLocalKeyFromRoamingAsync(IKey roamingKey, CancellationToken cancellationToken) instead of directly taking the local key. When an event stream is created, the roaming key must be set as the TargetId in the local key. Since the roaming key is imported during the pairing process, the local event stream must be created or updated with the imported key's id set as the EventStream{T}.TargetId. This delegate allows that to happen prior to local exchange.    
@@ -161,8 +166,8 @@ Initial release of OwlCore.Nomad.Kubo.
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
-		<PackageReference Include="OwlCore.Kubo" Version="0.17.2" />
-    	<PackageReference Include="OwlCore.Nomad" Version="0.8.0" />
+		<PackageReference Include="OwlCore.Kubo" Version="0.19.0" />
+    	<PackageReference Include="OwlCore.Nomad" Version="0.8.1" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
