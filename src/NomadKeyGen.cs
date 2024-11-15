@@ -44,7 +44,6 @@ public static class NomadKeyGen
         var defaultLocalValue = new EventStream<Cid>
         {
             Label = eventStreamLabel,
-            TargetId = roamingKey.Id,
             Entries = [],
         };
 
@@ -58,18 +57,15 @@ public static class NomadKeyGen
     /// </summary>
     /// <remarks>This method should only be used to instantiate a node that will be paired with a roaming key from a different node. If you're creating a roaming key for the first time, use <see cref="CreateAsync"/> instead to get recommended roaming values. </remarks>
     /// <param name="localKeyName">The name of the local key to create.</param>
-    /// <param name="roamingKey">The name of the roaming key to create.</param>
     /// <param name="kuboOptions">Options interacting with ipfs.</param>
     /// <param name="eventStreamLabel">The label to use for the created local event stream.</param>
     /// <param name="client">A client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static Task<(IKey Key, EventStream<Cid> Value)> GetOrCreateLocalAsync(string localKeyName, string eventStreamLabel, IKey roamingKey, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    public static Task<(IKey Key, EventStream<Cid> Value)> GetOrCreateLocalAsync(string localKeyName, string eventStreamLabel, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
     {
-        // Local key should contain an empty event stream with the roaming key as the targetid
         return client.GetOrCreateKeyAsync(localKeyName, _ => new EventStream<Cid>
         {
             Label = eventStreamLabel,
-            TargetId = roamingKey.Id, 
             Entries = [],
         }, kuboOptions.IpnsLifetime, nocache: !kuboOptions.UseCache, size: 4096, cancellationToken);
     }

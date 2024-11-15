@@ -95,7 +95,6 @@ public static class NomadKuboEventStreamHandlerExtensions
 
             // Add new entry cid to event stream content.
             handler.LocalEventStream.Entries.Add(newEventStreamEntryCid);
-            handler.AllEventStreamEntries.Add(newEventStreamEntry);
             
             return newEventStreamEntry;
         }
@@ -170,18 +169,11 @@ public static class NomadKuboEventStreamHandlerExtensions
             Guard.IsNotNullOrWhiteSpace(sourceCid);
 
             var eventStream = await eventStreamHandler.ResolveContentPointerAsync<EventStream<Cid>, TEventStreamEntryContent>(sourceCid, cancellationToken);
-            Guard.IsNotNullOrWhiteSpace(eventStream.TargetId);
             Guard.IsNotNullOrWhiteSpace(eventStreamHandler.EventStreamHandlerId);
 
             if (removedSources.Contains(sourceCid))
             {
                 Logger.LogWarning($"Source {sourceCid} was marked as removed and has been skipped. It will not be resolved unless it is re-added.");
-                continue;
-            }
-
-            if (eventStream.TargetId != eventStreamHandler.EventStreamHandlerId)
-            {
-                Logger.LogWarning($"Event stream {nameof(eventStream.TargetId)} {eventStream.TargetId} does not match event stream handler Id {eventStreamHandler.EventStreamHandlerId}, skipping");
                 continue;
             }
 

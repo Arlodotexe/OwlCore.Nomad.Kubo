@@ -44,12 +44,10 @@ public record NomadKuboEventStreamHandlerConfig<TRoaming>
     public required string RoamingKeyName { get; set; }
 
     /// <summary>
-    /// A collection of all event stream entries.
+    /// Pre-resolved event stream entries for this handler. Optional.
     /// </summary>
-    public required ICollection<EventStreamEntry<Cid>> AllEventStreamEntries { get; set; }
-
-    /// <summary>
-    /// The event stream handlers that are listening for updates.
-    /// </summary>
-    public required ICollection<ISharedEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>> ListeningEventStreamHandlers { get; set; }
+    /// <remarks>
+    /// A null value indicates the event stream entries have not been resolved.
+    /// </remarks>
+    public ICollection<EventStreamEntry<Cid>>? ResolvedEventStreamEntries { get; set; }
 }
