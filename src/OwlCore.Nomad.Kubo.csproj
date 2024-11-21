@@ -15,13 +15,31 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.13.0</Version>
+		<Version>0.14.0</Version>
 		<Product>OwlCore</Product>
 		<Description>Shared tooling for building Nomad-enabled applications on ipfs</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.14.0 ---
+[Breaking]
+Inherited breaking changes from OwlCore.Nomad 0.9.0.
+Removed all reference and usage of ListeningEventStreamHandlers, notably in constructors. This is no longer needed as root-level event stream handlers can now be managed by a repository.
+The AllEventStreamEntries is no longer stored on the handlers themselves by default, but are included as optional on a NomadKuboEventStreamHandlerConfig{TRoaming} and can still be used by implementations that need it.
+
+[New]
+Added static NomadKeyHelpers with method RoamingIdToNomadKeysAsync. This method takes an optional RoamingId and returns a tuple of the local and roaming keys along with the resolved roaming id (if not provided).
+Added NomadKuboEventStreamHandlerConfig{TRoaming} to be used for configuring repositories to construct modifiable or read-only event stream handlers.
+Added IReadOnlyNomadKuboRegistry{TReadOnly} and IModifiableNomadKuboRegistry{TReadOnly}.
+Added INomadKuboRepository{TModifiable, TReadOnly}, used to manage the lifecycle of items in a repository.
+Added INomadKuboRepository{TModifiable, TReadOnly, TCreateParam}. Similar to INomadKuboRepository{TModifiable, TReadOnly}, but has a parameter for creating new items. 
+Added NomadKuboRepository{TModifiable, TReadOnly, TRoaming, TEventEntryContent}, an inbox class that be used get or create root-level modifiable or read-only event stream handlers based on the available data.
+Added NomadKuboEventStreamHandlerExtensions.PublishLocalAsync to complement the existing PublishRoamingAsync method.
+
+[Fixed]
+NomadKuboEventStreamHandlerExtensions.ResolveEventStreamEntriesAsync no longer auto-includes the local key for resolution if missing. Fixes errors when the local key hasn't been published yet.
+
 --- 0.13.0 ---
 [New]
 Ported a generic NomadKeyGen version of the StorageKeyGenerator from OwlCore.Nomad.Storage.Kubo. This contains helpers for creating initial local and roaming Nomad IPNS keys in Kubo.  
@@ -167,11 +185,11 @@ Initial release of OwlCore.Nomad.Kubo.
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
-		<PackageReference Include="OwlCore.Kubo" Version="0.19.0" />
-    	<PackageReference Include="OwlCore.Nomad" Version="0.8.1" />
+		<PackageReference Include="OwlCore.Kubo" Version="0.20.0" />
+    	<PackageReference Include="OwlCore.Nomad" Version="0.9.0" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

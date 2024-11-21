@@ -5,28 +5,15 @@ using OwlCore.Kubo;
 namespace OwlCore.Nomad.Kubo;
 
 /// <summary>
-/// A read-only shared stream handler implementation.
+/// A base class for event stream handler implementations.
 /// </summary>
 public abstract class NomadKuboEventStreamHandler<TEventEntryContent> : INomadKuboEventStreamHandler<TEventEntryContent>
 {
-    /// <summary>
-    /// Creates a new instance of <see cref="NomadKuboEventStreamHandler{TEventEntryContent}"/>.
-    /// </summary>
-    /// <param name="listeningEventStreamHandlers">A shared collection of all available event streams that should participate in playback of events using their respective <see cref="IEventStreamHandler{TContentPointer, TEventStream, TEventStreamEntry}.AdvanceEventStreamAsync"/>. </param>
-    protected NomadKuboEventStreamHandler(ICollection<ISharedEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>> listeningEventStreamHandlers)
-    {
-        listeningEventStreamHandlers.Add(this);
-        ListeningEventStreamHandlers = listeningEventStreamHandlers;
-    }
-
     /// <inheritdoc />
     public required string EventStreamHandlerId { get; init; }
 
     /// <inheritdoc />
     public EventStreamEntry<Cid>? EventStreamPosition { get; set; }
-
-    /// <inheritdoc />
-    public required ICollection<EventStreamEntry<Cid>> AllEventStreamEntries { get; set; }
 
     /// <inheritdoc />
     public required EventStream<Cid> LocalEventStream { get; set; }
@@ -45,9 +32,6 @@ public abstract class NomadKuboEventStreamHandler<TEventEntryContent> : INomadKu
 
     /// <inheritdoc />
     public required IKuboOptions KuboOptions { get; set; }
-
-    /// <inheritdoc />
-    public ICollection<ISharedEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>> ListeningEventStreamHandlers { get; set; }
 
     /// <inheritdoc />
     public virtual async Task AdvanceEventStreamAsync(EventStreamEntry<Cid> streamEntry, CancellationToken cancellationToken)

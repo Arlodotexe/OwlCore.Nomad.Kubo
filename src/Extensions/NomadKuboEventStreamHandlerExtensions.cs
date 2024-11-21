@@ -43,6 +43,23 @@ public static class NomadKuboEventStreamHandlerExtensions
     }
 
     /// <summary>
+    /// Publishes the local event stream to the local ipns key on <paramref name="eventStreamHandler"/>.
+    /// </summary>
+    /// <typeparam name="TEventStreamHandler">The event stream handler type.</typeparam>
+    /// <typeparam name="TEventEntryContent">The type for <see cref="EventStreamEntry{T}.Content"/> on this handler.</typeparam>
+    /// <param name="eventStreamHandler">The handler to publish the local event stream for.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns></returns>
+    public static async Task PublishLocalAsync<TEventStreamHandler, TEventEntryContent>(this TEventStreamHandler eventStreamHandler, CancellationToken cancellationToken)
+        where TEventStreamHandler : INomadKuboEventStreamHandler<TEventEntryContent>
+    {
+        var cid = await eventStreamHandler.Client.Dag.PutAsync(eventStreamHandler.LocalEventStream, pin: eventStreamHandler.KuboOptions.ShouldPin, cancel: cancellationToken);
+        Guard.IsNotNull(cid);
+
+        _ = await eventStreamHandler.Client.Name.PublishAsync(cid, lifetime: eventStreamHandler.KuboOptions.IpnsLifetime, key: eventStreamHandler.LocalEventStreamKey.Name, cancel: cancellationToken);
+    }
+
+    /// <summary>
     /// Publishes the inner content to the roaming ipns key on <paramref name="eventStreamHandler"/>.
     /// </summary>
     public static async Task PublishRoamingAsync<TEventStreamHandler, TEventEntryContent, TContent>(
@@ -51,7 +68,7 @@ public static class NomadKuboEventStreamHandlerExtensions
         where TContent : class, ISources<Cid>
         where TEventStreamHandler : INomadKuboEventStreamHandler<TEventEntryContent>, IDelegable<TContent>
     {
-        var cid = await eventStreamHandler.Client.Dag.PutAsync(eventStreamHandler.Inner, cancel: cancellationToken);
+        var cid = await eventStreamHandler.Client.Dag.PutAsync(eventStreamHandler.Inner, pin: eventStreamHandler.KuboOptions.ShouldPin, cancel: cancellationToken);
         Guard.IsNotNull(cid);
 
         _ = await eventStreamHandler.Client.Name.PublishAsync(cid, lifetime: eventStreamHandler.KuboOptions.IpnsLifetime, key: eventStreamHandler.RoamingKey.Name, cancel: cancellationToken);
@@ -95,8 +112,7 @@ public static class NomadKuboEventStreamHandlerExtensions
 
             // Add new entry cid to event stream content.
             handler.LocalEventStream.Entries.Add(newEventStreamEntryCid);
-            handler.AllEventStreamEntries.Add(newEventStreamEntry);
-            
+
             return newEventStreamEntry;
         }
     }
@@ -147,11 +163,6 @@ public static class NomadKuboEventStreamHandlerExtensions
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
     public static async IAsyncEnumerable<EventStreamEntry<Cid>> ResolveEventStreamEntriesAsync<TEventStreamEntryContent>(this INomadKuboEventStreamHandler<TEventStreamEntryContent> eventStreamHandler, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        // Ensure local event stream has been added as a source
-        var existingLocalEventStream = eventStreamHandler.Sources.FirstOrDefault(x=> x == eventStreamHandler.LocalEventStreamKey.Id);
-        if (existingLocalEventStream is null)
-            eventStreamHandler.Sources.Add(eventStreamHandler.LocalEventStreamKey.Id);
-        
         // Resolve initial sources
         var sourceEvents = new Dictionary<Cid, Dictionary<Cid, EventStreamEntry<Cid>>>();
 
@@ -170,18 +181,11 @@ public static class NomadKuboEventStreamHandlerExtensions
             Guard.IsNotNullOrWhiteSpace(sourceCid);
 
             var eventStream = await eventStreamHandler.ResolveContentPointerAsync<EventStream<Cid>, TEventStreamEntryContent>(sourceCid, cancellationToken);
-            Guard.IsNotNullOrWhiteSpace(eventStream.TargetId);
             Guard.IsNotNullOrWhiteSpace(eventStreamHandler.EventStreamHandlerId);
 
             if (removedSources.Contains(sourceCid))
             {
                 Logger.LogWarning($"Source {sourceCid} was marked as removed and has been skipped. It will not be resolved unless it is re-added.");
-                continue;
-            }
-
-            if (eventStream.TargetId != eventStreamHandler.EventStreamHandlerId)
-            {
-                Logger.LogWarning($"Event stream {nameof(eventStream.TargetId)} {eventStream.TargetId} does not match event stream handler Id {eventStreamHandler.EventStreamHandlerId}, skipping");
                 continue;
             }
 

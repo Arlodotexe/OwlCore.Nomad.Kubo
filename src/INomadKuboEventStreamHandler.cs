@@ -9,7 +9,7 @@ namespace OwlCore.Nomad.Kubo;
 /// <remarks>
 /// If you're reading roaming data that you aren't publishing to, you don't need to resolve and replay the event stream.
 /// </remarks>
-public interface INomadKuboEventStreamHandler<in TEventEntryContent> : ISharedEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>
+public interface INomadKuboEventStreamHandler<in TEventEntryContent> : IEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>
 {
     /// <summary>
     /// The name of an Ipns key containing a Nomad event stream that can be appended and republished to modify the current folder.
