@@ -53,12 +53,16 @@ public class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEventEntryCo
             selfEventStreamHandlerConfig.RoamingKey = roaming.Key;
             selfEventStreamHandlerConfig.LocalValue = local.Value;
             selfEventStreamHandlerConfig.RoamingValue = roaming.Value;
+
+            // To avoid resolving an unpublished ipns key, set the resolved entries to empty.
+            selfEventStreamHandlerConfig.ResolvedEventStreamEntries = [];
         }
 
         Guard.IsNotNull(selfEventStreamHandlerConfig.RoamingId);
 
         // Created default or retrieved values are used.
-        var modifiable = await GetAsync(selfEventStreamHandlerConfig.RoamingId, cancellationToken);
+        // Reuse existing handler config instance (for new unpublished data)
+        var modifiable = await GetAsync(selfEventStreamHandlerConfig, cancellationToken);
 
         return (TModifiable)modifiable;
     }

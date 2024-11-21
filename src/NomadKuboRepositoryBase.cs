@@ -2,6 +2,7 @@
 using CommunityToolkit.Diagnostics;
 using Ipfs;
 using Ipfs.CoreApi;
+using OwlCore.Kubo;
 
 namespace OwlCore.Nomad.Kubo;
 
@@ -16,6 +17,11 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
     /// The IPFS client used to interact with the network.
     /// </summary>
     public required ICoreApi Client { get; init; }
+    
+    /// <summary>
+    /// Various options to use when interacting with Kubo's API.
+    /// </summary>
+    public required IKuboOptions KuboOptions { get; init; }
 
     /// <summary>
     /// The ID of the event stream handler that represents this node.
@@ -51,19 +57,36 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
     public required ModifiableFromHandlerConfigDelegate<TModifiable, TRoaming> ModifiableFromHandlerConfig { get; set; }
 
     /// <inheritdoc/>
-    public event EventHandler<TReadOnly[]>? ItemsAdded;
+    public virtual event EventHandler<TReadOnly[]>? ItemsAdded;
 
     /// <inheritdoc/>
-    public event EventHandler<TReadOnly[]>? ItemsRemoved;
-
-    /// <inheritdoc/>
-    public virtual async Task<TReadOnly> GetAsync(string id, CancellationToken cancellationToken)
-    {
-        // Return read-only if keys aren't found.
-        // Data should not be null when key is null
-        //  - Key should be null when the node is unpaired, which means to create a read-only instance.
-        //  - Data must be supplied to create read-only instance, must be pre-populated.
-        var config = await GetEventStreamHandlerConfigAsync(id, cancellationToken);
+    public virtual event EventHandler<TReadOnly[]>? ItemsRemoved;
+    
+    /// <summary>
+    /// Retrieves the items in the registry.
+    /// </summary>
+    /// <param name="config">The handler config to use when constructing the instance.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An async enumerable containing the items in the registry.</returns>
+    public virtual async Task<TReadOnly> GetAsync(NomadKuboEventStreamHandlerConfig<TRoaming> config, CancellationToken cancellationToken)
+    { 
+        if (config.RoamingValue is null && config.RoamingKey is not null)
+        {
+            // Roaming value should always be provided on creation (when unpublished)
+            // If roaming value is missing but the key is not, it may be published
+            // Resolve roaming value if needed.
+            var (resolvedRoaming, _) = await Client.ResolveDagCidAsync<TRoaming>(config.RoamingKey.Id, nocache: !KuboOptions.UseCache, cancellationToken);
+            config.RoamingValue = resolvedRoaming;
+            
+            // In this state, the local value may also be missing but resolvable.
+            // Resolve local value if needed.
+            if (config.LocalValue is null && config.LocalKey is not null)
+            {
+                var (resolvedLocal, _) = await Client.ResolveDagCidAsync<EventStream<Cid>>(config.LocalKey.Id, nocache: !KuboOptions.UseCache, cancellationToken);
+                config.LocalValue = resolvedLocal;
+            }
+        }
+        
         if (config.LocalValue is null || config.LocalKey is null)
         {
             // An "in-memory" state is required at the callsite where ReadOnly is constructed.
@@ -113,6 +136,17 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
     }
 
     /// <inheritdoc/>
+    public virtual async Task<TReadOnly> GetAsync(string id, CancellationToken cancellationToken)
+    {
+        // Return read-only if keys aren't found.
+        // Data should not be null when key is null
+        //  - Key should be null when the node is unpaired, which means to create a read-only instance.
+        //  - Data must be supplied to create read-only instance, must be pre-populated.
+        var config = await GetEventStreamHandlerConfigAsync(id, cancellationToken);
+        return await GetAsync(config, cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public virtual async IAsyncEnumerable<TReadOnly> GetAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var selfEventStreamHandlerConfig = await GetEventStreamHandlerConfigAsync(SelfRoamingId, cancellationToken);
@@ -121,7 +155,7 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
         // Only yields the item that represents this node.
         // There is only one known in this context, can be overriden in base class.
         if (selfEventStreamHandlerConfig.RoamingId is not null)
-            yield return await GetAsync(selfEventStreamHandlerConfig.RoamingId, cancellationToken);
+            yield return await GetAsync(selfEventStreamHandlerConfig, cancellationToken);
     }
 
     /// <inheritdoc/>

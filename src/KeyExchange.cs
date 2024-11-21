@@ -278,7 +278,7 @@ public static class KeyExchange
             // Resolve and republish existing content from this node
             var resolvedIpfsPath = await client.Name.ResolveAsync(output, recursive: true, nocache: !kuboOptions.UseCache, cancellationToken);
             var resolvedCid = resolvedIpfsPath.Replace("/ipfs/", "");
-            Logger.LogInformation($"Resolved imported key");
+            Logger.LogInformation("Resolved imported key");
 
             await client.Name.PublishAsync(resolvedCid, roamingKeyName, kuboOptions.IpnsLifetime, cancellationToken);
             Logger.LogInformation($"Republished imported key to {resolvedCid}");

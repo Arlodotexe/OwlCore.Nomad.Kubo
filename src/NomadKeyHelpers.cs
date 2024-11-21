@@ -17,7 +17,7 @@ public static class NomadKeyHelpers
     /// <param name="localKeyName">The name of the local key to use if <paramref name="roamingId"/> is null.</param>
     /// <param name="client">The client to use for communicating with IPFS.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task<(IKey? LocalKey, IKey? RoamingKey, string RoamingId)> RoamingIdToNomadKeysAsync(string? roamingId, string roamingKeyName, string localKeyName, ICoreApi client, CancellationToken cancellationToken)
+    public static async Task<(IKey? LocalKey, IKey? RoamingKey, string? RoamingId)> RoamingIdToNomadKeysAsync(string? roamingId, string roamingKeyName, string localKeyName, ICoreApi client, CancellationToken cancellationToken)
     {
         IKey? roamingKey = null;
         IKey? localKey = null;
@@ -39,7 +39,6 @@ public static class NomadKeyHelpers
             }
         }
 
-        Guard.IsNotNullOrWhiteSpace(roamingId);
         return (localKey, roamingKey, roamingId);
     }
 }
