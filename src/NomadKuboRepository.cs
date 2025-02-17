@@ -58,7 +58,7 @@ public class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEventEntryCo
             selfEventStreamHandlerConfig.ResolvedEventStreamEntries = [];
         }
 
-        Guard.IsNotNull(selfEventStreamHandlerConfig.RoamingId);
+        Guard.IsNotNullOrWhiteSpace(selfEventStreamHandlerConfig.RoamingId?.ToString());
 
         // Created default or retrieved values are used.
         // Reuse existing handler config instance (for new unpublished data)
