@@ -15,13 +15,21 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.14.0</Version>
+		<Version>0.14.1</Version>
 		<Product>OwlCore</Product>
 		<Description>Shared tooling for building Nomad-enabled applications on ipfs</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.14.1 ---
+[Fixes]
+KeyExchange.ReceiveRoamingKeyAsync now throws when stderr is received, instead of discarding the error.
+Fixed an issue in NomadKuboRepositoryBase.GetAsync that was causing nullrefs just before invoking the ReadOnlyFromHandlerConfig delegate.
+
+[Improvements]
+NomadKuboRepository.CreateAsync now throws if selfEventStreamHandlerConfig.RoamingId is null or whitespace, instead of just null.
+
 --- 0.14.0 ---
 [Breaking]
 Inherited breaking changes from OwlCore.Nomad 0.9.0.
