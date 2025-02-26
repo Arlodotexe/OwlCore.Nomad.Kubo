@@ -69,15 +69,15 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
     /// <returns>An async enumerable containing the items in the registry.</returns>
     public virtual async Task<TReadOnly> GetAsync(NomadKuboEventStreamHandlerConfig<TRoaming> config, CancellationToken cancellationToken)
-    { 
-        if (config.RoamingValue is null && config.RoamingKey is not null)
+    {
+        if (config.RoamingValue is null && config.RoamingId is not null)
         {
             // Roaming value should always be provided on creation (when unpublished)
             // If roaming value is missing but the key is not, it may be published
             // Resolve roaming value if needed.
-            var (resolvedRoaming, _) = await Client.ResolveDagCidAsync<TRoaming>(config.RoamingKey.Id, nocache: !KuboOptions.UseCache, cancellationToken);
+            var (resolvedRoaming, _) = await Client.ResolveDagCidAsync<TRoaming>(config.RoamingId, nocache: !KuboOptions.UseCache, cancellationToken);
             config.RoamingValue = resolvedRoaming;
-            
+
             // In this state, the local value may also be missing but resolvable.
             // Resolve local value if needed.
             if (config.LocalValue is null && config.LocalKey is not null)
@@ -91,7 +91,7 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
         {
             // An "in-memory" state is required at the callsite where ReadOnly is constructed.
             Guard.IsNotNull(config.RoamingValue);
-            Guard.IsNotNull(config.RoamingKey);
+            Guard.IsNotNull(config.RoamingId);
             return ReadOnlyFromHandlerConfig(config);
         }
         

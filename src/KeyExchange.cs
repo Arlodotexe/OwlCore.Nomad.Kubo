@@ -266,7 +266,8 @@ public static class KeyExchange
             await outputFile.WriteBytesAsync(message.DataBytes, cancellationToken);
 
             Guard.IsNotNull(kuboBootstrapper.KuboBinaryFile);
-            var (output, _) = ProcessHelpers.RunExecutable(kuboBootstrapper.KuboBinaryFile.Path, $"key import {roamingKeyName} {outputFile.Path} --repo-dir \"{kuboBootstrapper.RepoFolder.Path}\"", true);
+            var (output, error) = ProcessHelpers.RunExecutable(kuboBootstrapper.KuboBinaryFile.Path, $"key import {roamingKeyName} {outputFile.Path} --repo-dir \"{kuboBootstrapper.RepoFolder.Path}\"", true);
+            Guard.IsNullOrWhiteSpace(error);
             Logger.LogInformation($"Key {output} imported from peer {message.Sender.Id} as {roamingKeyName}, cleaning up");
                 
             // Wipe content from temp key file
