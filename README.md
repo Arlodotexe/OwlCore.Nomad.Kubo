@@ -10,6 +10,10 @@ Put simply, this library was built to help you easily cover the gap between "Use
 
 This library was specially crafted to take advantage of content addressing under a changing device topology, especially considering the one-to-many nature of IPNS, the immutability of IPFS CIDs, and the need for a "shared" p2p-native state that reaches an eventually consistency defined by the application.
 
+See also:
+- [Nomad Concept Glossary](docs/glossary/nomad.md)
+- [IPFS Concept Glossary](docs/glossary/ipfs.md)
+
 ## Featuring:
 - Interfaces and models for building Nomad applications using Ipfs/Kubo.
 - A base implementation `NomadKuboEventStreamHandler` that handles advancing the handler's event stream using resolved data from ipfs.
