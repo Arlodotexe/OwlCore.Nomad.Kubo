@@ -17,7 +17,7 @@ These are technologies created by or heavily used by Protocol Labs or the IPFS S
 
 ## Protocol Labs
 
-tl;dr;: **Protocol Labs created IPFS**.
+tl;dr;: **Protocol Labs created IPFS** circa 2014
 
 From [the website](https://www.protocol.ai/):
 
