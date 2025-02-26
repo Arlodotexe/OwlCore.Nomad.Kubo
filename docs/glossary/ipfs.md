@@ -131,7 +131,7 @@ Where each `bafy...` resolves to a `user`:
 
 Note that the user has linked to several projects here, which themselves may link to other users. 
 
-With content addressing, we're able to sparsely walk and resolve this object as needed, and since we're using immutable CIDs we can retrieve that data from anyone. Trust and mutability is added using a seperate layer-- IPNS.
+With content addressing, we're able to sparsely walk and resolve this object as needed, and since we're using immutable CIDs we can retrieve that data from anyone. Trust and mutability is added using a separate layer-- IPNS.
 
 ### CAR exporting
 
