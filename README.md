@@ -13,6 +13,8 @@ This library was specially crafted to take advantage of content addressing under
 See also:
 - [Nomad Concept Glossary](docs/glossary/nomad.md)
 - [IPFS Concept Glossary](docs/glossary/ipfs.md)
+- [Problems Faced](#problems-faced)
+- [Solutions](#solutions)
 
 ## Featuring:
 - Interfaces and models for building Nomad applications using Ipfs/Kubo.
