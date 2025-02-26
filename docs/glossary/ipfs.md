@@ -105,7 +105,7 @@ Through codecs, we're able to seamlessly serialize between raw IPLD and JSON, Pr
 
 A key part of IPLD is its ability to link from one DAG to another through content addressing.  
 
-IPLD linking usees CIDs for this. In practice, this might looks like:
+IPLD linking uses CIDs for this. In practice, this might looks like:
 ```json
 {
     "name": "myproject",
