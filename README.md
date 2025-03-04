@@ -54,6 +54,15 @@ Given all the tools available in Kubo, we are unable to arrive at eventual consi
 
 This happens because of the way the DHT works. It's designed to have one node publishing a value that propogates to other nodes, a bit like DNS. It's **not** designed to pull values from another device publishing to the same address, even if that value is newer. 
 
+![](./docs/ipns-overview.png)
+
+References
+```
+http://bafybeifugnn4vw5vmf4ehk5cqsqqeky4jujzhwy4vdutrx6bptgszswzey.ipfs.dweb.link/ipns/ipns-record/#overview
+ipns://specs.ipfs.tech/ipfs/ipns-record/#overview
+ipfs://bafybeifugnn4vw5vmf4ehk5cqsqqeky4jujzhwy4vdutrx6bptgszswzey/ipns/ipns-record/#overview
+```
+
 Above all else, the network can be partitioned, which means a "shared" state cannot achieve eventual consistency without replaying history to resolve conflicts.
 
 ### Many devices, one user
