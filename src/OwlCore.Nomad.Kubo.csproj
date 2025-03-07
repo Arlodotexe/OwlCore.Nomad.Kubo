@@ -201,19 +201,16 @@ Initial release of OwlCore.Nomad.Kubo.
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.2" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
-		<PackageReference Include="OwlCore.Kubo" Version="0.20.0" />
-		<PackageReference Include="PolySharp" Version="1.14.1">
+		<PackageReference Include="OwlCore.Kubo" Version="0.20.1" />
+    	<PackageReference Include="OwlCore.Nomad" Version="0.10.0" />
+		<PackageReference Include="PolySharp" Version="1.15.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ProjectReference Include="..\..\ocnomad\src\OwlCore.Nomad.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
