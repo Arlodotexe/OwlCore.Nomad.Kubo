@@ -29,6 +29,9 @@ Existing event streams will need to be recreated or migrated to the new model ch
 Removed SourceAddEvent and SourceRemoveEvent. The EventId for these have changed and have been moved to a static ReservedEventIds class.
 All code regarding Event Streams and Event Stream Entries have been updated to use DagCid instead of Cid. Cid can be a libp2p key, while a DagCid always links immutable data.
 
+[Improvement]
+The method NomadKuboEventStreamHandlerBase.AppendNewEntryAsync now has a default body as has been marked virtual. It no longer needs to be overriden in a derived class if the default behavior is desired.
+
 --- 0.14.1 ---
 [Fixes]
 KeyExchange.ReceiveRoamingKeyAsync now throws when stderr is received, instead of discarding the error.
