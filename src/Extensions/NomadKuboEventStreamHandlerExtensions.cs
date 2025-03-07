@@ -193,7 +193,7 @@ public static class NomadKuboEventStreamHandlerExtensions
             foreach (var entryCid in eventStream.Entries)
             {
                 Guard.IsNotNullOrWhiteSpace(entryCid?.ToString());
-                var entry = await eventStreamHandler.ResolveContentPointerAsync<EventStreamEntry<DagCid>, TEventStreamEntryContent>(entryCid, cancellationToken);
+                var entry = await eventStreamHandler.Client.Dag.GetAsync<EventStreamEntry<DagCid>>(entryCid, cancel: cancellationToken);
                 Guard.IsNotNull(entry);
                 entriesDict[entryCid] = entry;
 
