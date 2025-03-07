@@ -116,7 +116,7 @@ public static class KeyExchange
     /// It's HIGHLY recommended to use an encryption pubsub layer for your peer room. 
     /// </remarks>
     /// <param name="peerRoom">The room to perform the exchange in.</param>
-    /// <param name="localKey">The local key for this node. If <paramref name="isReceiver"/> is false, this key will be sent, otherwise the received key will be added in a new <see cref="SourceAddEvent"/> to the event stream at this key.</param>
+    /// <param name="localKey">The local key for this node. If <paramref name="isReceiver"/> is false, this key will be sent, otherwise the received key will be added in a new <see cref="ReservedEventIds.NomadEventStreamSourceAddEvent"/> to the event stream at this key.</param>
     /// <param name="roamingKeyName">The name to use for the imported roaming key.</param>
     /// <param name="isReceiver">When true, this method will act as the receiver. When false, this method will act as the sender.</param>
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
@@ -211,7 +211,7 @@ public static class KeyExchange
             var eventEntry = new EventStreamEntry<DagCid>
             {
                 TargetId = roamingKeyId,
-                EventId = "SourceAddEvent",
+                EventId = ReservedEventIds.NomadEventStreamSourceAddEvent,
                 Content = (DagCid)newSourceDagCid,
                 TimestampUtc = DateTime.UtcNow,
             };

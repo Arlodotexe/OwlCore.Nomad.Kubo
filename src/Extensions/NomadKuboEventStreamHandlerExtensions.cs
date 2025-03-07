@@ -204,7 +204,7 @@ public static class NomadKuboEventStreamHandlerExtensions
                 Guard.IsNotNullOrWhiteSpace(entry.EventId);
 
                 // Added source
-                if (entry.EventId == "SourceAddEvent")
+                if (entry.EventId == ReservedEventIds.NomadEventStreamSourceAddEvent)
                 {
                     var entryContent = await eventStreamHandler.Client.Dag.GetAsync<Cid>(entry.Content, cancel: cancellationToken);
 
@@ -234,7 +234,7 @@ public static class NomadKuboEventStreamHandlerExtensions
                     }
                 }
                 // Removed source
-                else if (entry.EventId == "SourceRemoveEvent")
+                else if (entry.EventId == ReservedEventIds.NomadEventStreamSourceRemoveEvent)
                 {
                     var entryContent = await eventStreamHandler.Client.Dag.GetAsync<Cid>(entry.Content, cancel: cancellationToken);
 
@@ -274,7 +274,7 @@ public static class NomadKuboEventStreamHandlerExtensions
                 Guard.IsNotNullOrWhiteSpace(entry.Value.EventId);
                 Guard.IsNotNullOrWhiteSpace(entry.Value.TargetId);
 
-                if (entry.Value.EventId != "SourceAddEvent" && entry.Value.EventId != "SourceRemoveEvent")
+                if (entry.Value.EventId != ReservedEventIds.NomadEventStreamSourceAddEvent && entry.Value.EventId != ReservedEventIds.NomadEventStreamSourceRemoveEvent)
                     yield return entry.Value;
             }
         }
