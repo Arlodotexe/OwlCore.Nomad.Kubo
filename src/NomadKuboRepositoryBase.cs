@@ -82,7 +82,7 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
             // Resolve local value if needed.
             if (config.LocalValue is null && config.LocalKey is not null)
             {
-                var (resolvedLocal, _) = await Client.ResolveDagCidAsync<EventStream<Cid>>(config.LocalKey.Id, nocache: !KuboOptions.UseCache, cancellationToken);
+                var (resolvedLocal, _) = await Client.ResolveDagCidAsync<EventStream<DagCid>>(config.LocalKey.Id, nocache: !KuboOptions.UseCache, cancellationToken);
                 config.LocalValue = resolvedLocal;
             }
         }
@@ -196,4 +196,4 @@ public delegate TReadOnly ReadOnlyFromHandlerConfigDelegate<out TReadOnly, TRoam
 /// <param name="handlerConfig">The handler configuration to use.</param>
 /// <returns>A new instance of the modifiable type.</returns>
 public delegate TModifiable ModifiableFromHandlerConfigDelegate<out TModifiable, TRoaming>(NomadKuboEventStreamHandlerConfig<TRoaming> handlerConfig)
-    where TModifiable : IEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>;
+    where TModifiable : IEventStreamHandler<DagCid, Cid, EventStream<DagCid>, EventStreamEntry<DagCid>>;

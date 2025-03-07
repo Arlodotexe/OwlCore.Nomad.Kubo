@@ -19,7 +19,7 @@ public static class NomadKeyGen
     /// <param name="eventStreamLabel">The label to use for the created local event stream.</param>
     /// <param name="client">A client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task<((IKey Key, EventStream<Cid> Value) Local, (IKey Key, TRoaming Value) Roaming)> CreateAsync<TRoaming>(string localKeyName, string roamingKeyName, string eventStreamLabel, Func<IKey, IKey, TRoaming> getDefaultRoamingValue, ICoreApi client, CancellationToken cancellationToken)
+    public static async Task<((IKey Key, EventStream<DagCid> Value) Local, (IKey Key, TRoaming Value) Roaming)> CreateAsync<TRoaming>(string localKeyName, string roamingKeyName, string eventStreamLabel, Func<IKey, IKey, TRoaming> getDefaultRoamingValue, ICoreApi client, CancellationToken cancellationToken)
     {
         // Get or create ipns key
         var enumerableKeys = await client.Key.ListAsync(cancellationToken);
@@ -41,7 +41,7 @@ public static class NomadKeyGen
         // otherwise we'd have an extra step during pairing, exporting local separately from roaming from A to B.
         // ---
         // This is can be retroactively handled when publishing an event stream to roaming, but it's best if done in the seed values.
-        var defaultLocalValue = new EventStream<Cid>
+        var defaultLocalValue = new EventStream<DagCid>
         {
             Label = eventStreamLabel,
             Entries = [],
@@ -61,9 +61,9 @@ public static class NomadKeyGen
     /// <param name="eventStreamLabel">The label to use for the created local event stream.</param>
     /// <param name="client">A client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static Task<(IKey Key, EventStream<Cid> Value)> GetOrCreateLocalAsync(string localKeyName, string eventStreamLabel, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    public static Task<(IKey Key, EventStream<DagCid> Value)> GetOrCreateLocalAsync(string localKeyName, string eventStreamLabel, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
     {
-        return client.GetOrCreateKeyAsync(localKeyName, _ => new EventStream<Cid>
+        return client.GetOrCreateKeyAsync(localKeyName, _ => new EventStream<DagCid>
         {
             Label = eventStreamLabel,
             Entries = [],
