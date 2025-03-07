@@ -37,15 +37,19 @@ public interface INomadKuboEventStreamHandler<in TEventEntryContent> : IEventStr
     /// <summary>
     /// Applies an event stream update to this object without side effects.
     /// </summary>
-    /// <param name="updateEvent">The update to apply without side effects.</param>
+    /// <param name="eventStreamEntry">The event stream entry</param>
+    /// <param name="eventEntryContent">The update to apply without side effects.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public Task ApplyEntryUpdateAsync(TEventEntryContent updateEvent, CancellationToken cancellationToken);
-    
+    public Task ApplyEntryUpdateAsync(EventStreamEntry<Cid> eventStreamEntry, TEventEntryContent eventEntryContent, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Appends the provided event entry of type <typeparamref name="TEventEntryContent"/> to the underlying event stream.
     /// </summary>
-    /// <param name="updateEvent">The update event data to apply and persist.</param>
+    /// <param name="targetId">A unique identifier that represents the scope the applied event occurred within.</param>
+    /// <param name="eventId">A unique identifier for the event that occured within this <paramref name="targetId"/>.</param>
+    /// <param name="eventEntryContent">The update event data to apply and persist.</param>
+    /// <param name="timestampUtc">The recorded UTC timestamp when this event entry was applied.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
     /// <returns>A task containing the event stream entry that was applied from the update.</returns>
-    public Task<EventStreamEntry<Cid>> AppendNewEntryAsync(TEventEntryContent updateEvent, CancellationToken cancellationToken = default);
+    public Task<EventStreamEntry<Cid>> AppendNewEntryAsync(string targetId, string eventId, TEventEntryContent eventEntryContent, DateTime? timestampUtc = null, CancellationToken cancellationToken = default);
 }

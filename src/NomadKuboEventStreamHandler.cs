@@ -1,4 +1,5 @@
-﻿using Ipfs;
+﻿using CommunityToolkit.Diagnostics;
+using Ipfs;
 using Ipfs.CoreApi;
 using OwlCore.Kubo;
 
@@ -38,17 +39,23 @@ public abstract class NomadKuboEventStreamHandler<TEventEntryContent> : INomadKu
     {
         var (result, _) = await Client.ResolveDagCidAsync<TEventEntryContent>(streamEntry.Content, nocache: false, cancellationToken);
         if (result is not null)
-            await ApplyEntryUpdateAsync(result, cancellationToken);
+            await ApplyEntryUpdateAsync(streamEntry, result, cancellationToken);
 
         EventStreamPosition = streamEntry;
     }
-    
+
     /// <inheritdoc />
-    public abstract Task<EventStreamEntry<Cid>> AppendNewEntryAsync(TEventEntryContent updateEvent, CancellationToken cancellationToken = default);
+    public virtual async Task<EventStreamEntry<Cid>> AppendNewEntryAsync(string targetId, string eventId, TEventEntryContent eventEntryContent, DateTime? timestampUtc = null, CancellationToken cancellationToken = default)
+    {
+        Guard.IsNotNull(eventEntryContent);
+        var localUpdateEventCid = await Client.Dag.PutAsync(eventEntryContent, pin: KuboOptions.ShouldPin, cancel: cancellationToken);
+        var newEntry = await this.AppendEventStreamEntryAsync(localUpdateEventCid, eventId, targetId, cancellationToken);
+        return newEntry;
+    }
 
     /// <inheritdoc />
     public abstract Task ResetEventStreamPositionAsync(CancellationToken cancellationToken);
 
     /// <inheritdoc />
-    public abstract Task ApplyEntryUpdateAsync(TEventEntryContent updateEvent, CancellationToken cancellationToken);
+    public abstract Task ApplyEntryUpdateAsync(EventStreamEntry<Cid> streamEntry, TEventEntryContent updateEvent, CancellationToken cancellationToken);
 }

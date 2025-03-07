@@ -205,22 +205,17 @@ public static class NomadKuboEventStreamHandlerExtensions
                 Guard.IsNotNullOrWhiteSpace(entry.EventId);
 
                 // Added source
-                if (entry.EventId == nameof(SourceAddEvent))
+                if (entry.EventId == "SourceAddEvent")
                 {
-                    var sourceAddEvent = await eventStreamHandler.ResolveContentPointerAsync<SourceAddEvent, TEventStreamEntryContent>(entry.Content, cancellationToken);
-                    Guard.IsNotNullOrWhiteSpace(sourceAddEvent.AddedSourcePointer);
-                    Guard.IsNotNullOrWhiteSpace(sourceAddEvent.EventId);
-                    Guard.IsNotNullOrWhiteSpace(sourceAddEvent.TargetId);
-
                     // Add to handler
-                    if (eventStreamHandler.Sources.All(x => x != sourceAddEvent.AddedSourcePointer))
+                    if (eventStreamHandler.Sources.All(x => x != entry.Content))
                     {
-                        eventStreamHandler.Sources.Add(sourceAddEvent.AddedSourcePointer);
-                        Logger.LogInformation($"Added source {sourceAddEvent.AddedSourcePointer} to event stream handler {eventStreamHandler.EventStreamHandlerId}");
+                        eventStreamHandler.Sources.Add(entry.Content);
+                        Logger.LogInformation($"Added source {entry.Content} to event stream handler {eventStreamHandler.EventStreamHandlerId}");
                     }
 
                     // Add to queue
-                    var newKvp = new KeyValuePair<Cid, Dictionary<Cid, EventStreamEntry<Cid>>>(sourceAddEvent.AddedSourcePointer, []);
+                    var newKvp = new KeyValuePair<Cid, Dictionary<Cid, EventStreamEntry<Cid>>>(entry.Content, []);
 
                     if (queue.All(x => x.Key != newKvp.Key))
                         queue.Enqueue(newKvp);
@@ -231,31 +226,26 @@ public static class NomadKuboEventStreamHandlerExtensions
                     Logger.LogInformation($"Enqueued new source {newKvp.Key} for entry resolution");
 
                     // Unmark as removed if needed
-                    if (removedSources.Any(x => x == sourceAddEvent.AddedSourcePointer))
+                    if (removedSources.Any(x => x == entry.Content))
                     {
-                        removedSources.Remove(sourceAddEvent.AddedSourcePointer);
-                        Logger.LogInformation($"Unmarked source {sourceAddEvent.AddedSourcePointer} as removed {eventStreamHandler.EventStreamHandlerId}");
+                        removedSources.Remove(entry.Content);
+                        Logger.LogInformation($"Unmarked source {entry.Content} as removed {eventStreamHandler.EventStreamHandlerId}");
                     }
                 }
                 // Removed source
-                else if (entry.EventId == nameof(SourceRemoveEvent))
+                else if (entry.EventId == "SourceRemoveEvent")
                 {
-                    var sourceRemoveEvent = await eventStreamHandler.ResolveContentPointerAsync<SourceRemoveEvent, TEventStreamEntryContent>(entry.Content, cancellationToken);
-                    Guard.IsNotNullOrWhiteSpace(sourceRemoveEvent.RemovedSourcePointer);
-                    Guard.IsNotNullOrWhiteSpace(sourceRemoveEvent.EventId);
-                    Guard.IsNotNullOrWhiteSpace(sourceRemoveEvent.TargetId);
-
-                    if (eventStreamHandler.Sources.Contains(sourceRemoveEvent.RemovedSourcePointer))
+                    if (eventStreamHandler.Sources.Contains(entry.Content))
                     {
-                        Logger.LogInformation($"Removed source {sourceRemoveEvent.RemovedSourcePointer} from event stream handler {eventStreamHandler.EventStreamHandlerId}");
-                        eventStreamHandler.Sources.Remove(sourceRemoveEvent.RemovedSourcePointer);
+                        Logger.LogInformation($"Removed source {entry.Content} from event stream handler {eventStreamHandler.EventStreamHandlerId}");
+                        eventStreamHandler.Sources.Remove(entry.Content);
                     }
 
                     // Don't want to re-resolve if source is re-added
                     // Rather than removing the event stream source and entries,
                     // mark as 'removed' and don't yield.
-                    removedSources.Add(sourceRemoveEvent.RemovedSourcePointer);
-                    Logger.LogInformation($"Marked source {sourceRemoveEvent.RemovedSourcePointer} as removed {eventStreamHandler.EventStreamHandlerId}");
+                    removedSources.Add(entry.Content);
+                    Logger.LogInformation($"Marked source {entry.Content} as removed {eventStreamHandler.EventStreamHandlerId}");
                 }
             }
         }
@@ -281,7 +271,7 @@ public static class NomadKuboEventStreamHandlerExtensions
                 Guard.IsNotNullOrWhiteSpace(entry.Value.EventId);
                 Guard.IsNotNullOrWhiteSpace(entry.Value.TargetId);
 
-                if (entry.Value.EventId != nameof(SourceAddEvent) && entry.Value.EventId != nameof(SourceRemoveEvent))
+                if (entry.Value.EventId != "SourceAddEvent" && entry.Value.EventId != "SourceRemoveEvent")
                     yield return entry.Value;
             }
         }

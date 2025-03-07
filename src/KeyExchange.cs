@@ -204,11 +204,7 @@ public static class KeyExchange
             var messageStr = Encoding.UTF8.GetString(message.DataBytes);
             var newSourceCid = (Cid)messageStr;
             Logger.LogInformation($"Received event stream source {newSourceCid} from peer {message.Sender.Id}");
-                
-            Logger.LogInformation($"Creating new {nameof(SourceAddEvent)}");
-            var sourceAddEvent = new SourceAddEvent(roamingKeyId, newSourceCid);
-            var sourceAddEventEntryContentCid = await client.Dag.PutAsync(sourceAddEvent, pin: kuboOptions.ShouldPin, cancel: cancellationToken);
-
+            
             // Open local event stream source
             Logger.LogInformation("Opening local event stream");
             var (localEventStream, _) = await client.ResolveDagCidAsync<EventStream<Cid>>(localKeyId, nocache: !kuboOptions.UseCache, cancellationToken);
@@ -217,15 +213,15 @@ public static class KeyExchange
             var eventEntry = new EventStreamEntry<Cid>
             {
                 TargetId = roamingKeyId,
-                EventId = nameof(SourceAddEvent),
-                Content = sourceAddEventEntryContentCid,
+                EventId = "SourceAddEvent",
+                Content = newSourceCid,
                 TimestampUtc = DateTime.UtcNow,
             };
             
             var eventEntryCid = await client.Dag.PutAsync(eventEntry, pin: kuboOptions.ShouldPin, cancel: cancellationToken);
-
-            Logger.LogInformation($"Added new {nameof(SourceAddEvent)} to local event stream");
             localEventStream.Entries.Add(eventEntryCid);
+
+            Logger.LogInformation($"Added new event {eventEntry.EventId} to local event stream, getting updating event stream CID.");
             var updatedLocalEventStreamCid = await client.Dag.PutAsync(localEventStream, pin: kuboOptions.ShouldPin, cancel: cancellationToken);
             
             Logger.LogInformation($"Publishing local event stream {localKeyName}");
