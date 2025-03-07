@@ -204,7 +204,7 @@ Initial release of OwlCore.Nomad.Kubo.
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
 		<PackageReference Include="OwlCore.Kubo" Version="0.20.1" />
-    	<PackageReference Include="OwlCore.Nomad" Version="0.10.0" />
+    	<PackageReference Include="OwlCore.Nomad" Version="0.10.1" />
 		<PackageReference Include="PolySharp" Version="1.15.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
