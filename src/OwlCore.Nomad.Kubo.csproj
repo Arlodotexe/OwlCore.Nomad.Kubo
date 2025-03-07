@@ -17,7 +17,7 @@
 		<Author>Arlo Godfrey</Author>
 		<Version>0.15.0</Version>
 		<Product>OwlCore</Product>
-		<Description>Build a modifiable application domain across Kubo peers with eventual consistency. Easily cover the gap between "User device" and "User".</Description>
+		<Description>Build a modifiable application domain across Kubo peers with eventual consistency. Cover the gap between "User device" and "User".</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
