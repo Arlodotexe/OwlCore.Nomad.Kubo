@@ -15,13 +15,21 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.14.1</Version>
+		<Version>0.15.0</Version>
 		<Product>OwlCore</Product>
 		<Description>Shared tooling for building Nomad-enabled applications on ipfs</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.15.0 ---
+[Breaking]
+Removed SourceAddEvent and SourceRemoveEvent. The EventId for these are now hardcoded.
+The logic for NomadKuboEventStreamHandlerExtensions.ResolveEventStreamEntriesAsync has been updated. 
+Inherited and implemented breaking changes from OwlCore.Nomad 0.10.0 and OwlCore.Nomad.Storage 0.10.0.
+All code regarding Event Streams and Event Stream Entries have been updated to use DagCid instead of Cid. Cid can be a libp2p key, while a DagCid always links immutable data.
+Existing event streams will need to be recreated or migrated to the new format. 
+
 --- 0.14.1 ---
 [Fixes]
 KeyExchange.ReceiveRoamingKeyAsync now throws when stderr is received, instead of discarding the error.
@@ -197,12 +205,15 @@ Initial release of OwlCore.Nomad.Kubo.
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
 		<PackageReference Include="OwlCore.Kubo" Version="0.20.0" />
-    	<PackageReference Include="OwlCore.Nomad" Version="0.9.0" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\ocnomad\src\OwlCore.Nomad.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -21,7 +21,7 @@ public record NomadKuboEventStreamHandlerConfig<TRoaming>
     /// <summary>
     /// The value of the local event stream.
     /// </summary>
-    public EventStream<Cid>? LocalValue { get; set; }
+    public EventStream<DagCid>? LocalValue { get; set; }
 
     /// <summary>
     /// The key used to publish the roaming data.
@@ -49,5 +49,5 @@ public record NomadKuboEventStreamHandlerConfig<TRoaming>
     /// <remarks>
     /// A null value indicates the event stream entries have not been resolved.
     /// </remarks>
-    public ICollection<EventStreamEntry<Cid>>? ResolvedEventStreamEntries { get; set; }
+    public ICollection<EventStreamEntry<DagCid>>? ResolvedEventStreamEntries { get; set; }
 }

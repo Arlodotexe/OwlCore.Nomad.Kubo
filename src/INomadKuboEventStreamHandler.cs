@@ -9,7 +9,7 @@ namespace OwlCore.Nomad.Kubo;
 /// <remarks>
 /// If you're reading roaming data that you aren't publishing to, you don't need to resolve and replay the event stream.
 /// </remarks>
-public interface INomadKuboEventStreamHandler<in TEventEntryContent> : IEventStreamHandler<Cid, EventStream<Cid>, EventStreamEntry<Cid>>
+public interface INomadKuboEventStreamHandler<in TEventEntryContent> : IEventStreamHandler<DagCid, Cid, EventStream<DagCid>, EventStreamEntry<DagCid>>
 {
     /// <summary>
     /// The name of an Ipns key containing a Nomad event stream that can be appended and republished to modify the current folder.
@@ -40,7 +40,7 @@ public interface INomadKuboEventStreamHandler<in TEventEntryContent> : IEventStr
     /// <param name="eventStreamEntry">The event stream entry</param>
     /// <param name="eventEntryContent">The update to apply without side effects.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public Task ApplyEntryUpdateAsync(EventStreamEntry<Cid> eventStreamEntry, TEventEntryContent eventEntryContent, CancellationToken cancellationToken = default);
+    public Task ApplyEntryUpdateAsync(EventStreamEntry<DagCid> eventStreamEntry, TEventEntryContent eventEntryContent, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Appends the provided event entry of type <typeparamref name="TEventEntryContent"/> to the underlying event stream.
@@ -51,5 +51,5 @@ public interface INomadKuboEventStreamHandler<in TEventEntryContent> : IEventStr
     /// <param name="timestampUtc">The recorded UTC timestamp when this event entry was applied.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
     /// <returns>A task containing the event stream entry that was applied from the update.</returns>
-    public Task<EventStreamEntry<Cid>> AppendNewEntryAsync(string targetId, string eventId, TEventEntryContent eventEntryContent, DateTime? timestampUtc = null, CancellationToken cancellationToken = default);
+    public Task<EventStreamEntry<DagCid>> AppendNewEntryAsync(string targetId, string eventId, TEventEntryContent eventEntryContent, DateTime? timestampUtc = null, CancellationToken cancellationToken = default);
 }

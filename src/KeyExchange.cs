@@ -5,7 +5,6 @@ using Ipfs.CoreApi;
 using OwlCore.Diagnostics;
 using OwlCore.Kubo;
 using OwlCore.Kubo.Extensions;
-using OwlCore.Nomad.Kubo.Events;
 using OwlCore.Storage;
 using OwlCore.Storage.System.IO;
 
@@ -14,9 +13,6 @@ namespace OwlCore.Nomad.Kubo;
 /// <summary>
 /// A delegate that, given a roaming key, gets or creates the corresponding local key containing an event stream.
 /// </summary>
-/// <remarks>
-/// The event stream in the returned local key should have a <see cref="EventStream{T}.TargetId"/> that matches the <paramref name="roamingKey"/>'s <see cref="IKey.Id"/>.
-/// </remarks>
 /// <param name="roamingKey">The roaming key to use to create the local key.</param>
 /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
 /// <returns></returns>
@@ -207,19 +203,21 @@ public static class KeyExchange
             
             // Open local event stream source
             Logger.LogInformation("Opening local event stream");
-            var (localEventStream, _) = await client.ResolveDagCidAsync<EventStream<Cid>>(localKeyId, nocache: !kuboOptions.UseCache, cancellationToken);
+            var (localEventStream, _) = await client.ResolveDagCidAsync<EventStream<DagCid>>(localKeyId, nocache: !kuboOptions.UseCache, cancellationToken);
             Guard.IsNotNull(localEventStream);
 
-            var eventEntry = new EventStreamEntry<Cid>
+            var newSourceDagCid = await client.Dag.PutAsync(newSourceCid, pin: kuboOptions.ShouldPin, cancel: cancellationToken);
+
+            var eventEntry = new EventStreamEntry<DagCid>
             {
                 TargetId = roamingKeyId,
                 EventId = "SourceAddEvent",
-                Content = newSourceCid,
+                Content = (DagCid)newSourceDagCid,
                 TimestampUtc = DateTime.UtcNow,
             };
             
             var eventEntryCid = await client.Dag.PutAsync(eventEntry, pin: kuboOptions.ShouldPin, cancel: cancellationToken);
-            localEventStream.Entries.Add(eventEntryCid);
+            localEventStream.Entries.Add((DagCid)eventEntryCid);
 
             Logger.LogInformation($"Added new event {eventEntry.EventId} to local event stream, getting updating event stream CID.");
             var updatedLocalEventStreamCid = await client.Dag.PutAsync(localEventStream, pin: kuboOptions.ShouldPin, cancel: cancellationToken);

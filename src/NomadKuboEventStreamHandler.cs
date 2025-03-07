@@ -14,10 +14,10 @@ public abstract class NomadKuboEventStreamHandler<TEventEntryContent> : INomadKu
     public required string EventStreamHandlerId { get; init; }
 
     /// <inheritdoc />
-    public EventStreamEntry<Cid>? EventStreamPosition { get; set; }
+    public EventStreamEntry<DagCid>? EventStreamPosition { get; set; }
 
     /// <inheritdoc />
-    public required EventStream<Cid> LocalEventStream { get; set; }
+    public required EventStream<DagCid> LocalEventStream { get; set; }
 
     /// <inheritdoc />
     public virtual required ICollection<Cid> Sources { get; init; }
@@ -35,7 +35,7 @@ public abstract class NomadKuboEventStreamHandler<TEventEntryContent> : INomadKu
     public required IKuboOptions KuboOptions { get; set; }
 
     /// <inheritdoc />
-    public virtual async Task AdvanceEventStreamAsync(EventStreamEntry<Cid> streamEntry, CancellationToken cancellationToken)
+    public virtual async Task AdvanceEventStreamAsync(EventStreamEntry<DagCid> streamEntry, CancellationToken cancellationToken)
     {
         var (result, _) = await Client.ResolveDagCidAsync<TEventEntryContent>(streamEntry.Content, nocache: false, cancellationToken);
         if (result is not null)
@@ -45,11 +45,11 @@ public abstract class NomadKuboEventStreamHandler<TEventEntryContent> : INomadKu
     }
 
     /// <inheritdoc />
-    public virtual async Task<EventStreamEntry<Cid>> AppendNewEntryAsync(string targetId, string eventId, TEventEntryContent eventEntryContent, DateTime? timestampUtc = null, CancellationToken cancellationToken = default)
+    public virtual async Task<EventStreamEntry<DagCid>> AppendNewEntryAsync(string targetId, string eventId, TEventEntryContent eventEntryContent, DateTime? timestampUtc = null, CancellationToken cancellationToken = default)
     {
         Guard.IsNotNull(eventEntryContent);
         var localUpdateEventCid = await Client.Dag.PutAsync(eventEntryContent, pin: KuboOptions.ShouldPin, cancel: cancellationToken);
-        var newEntry = await this.AppendEventStreamEntryAsync(localUpdateEventCid, eventId, targetId, cancellationToken);
+        var newEntry = await this.AppendEventStreamEntryAsync((DagCid)localUpdateEventCid, eventId, targetId, cancellationToken);
         return newEntry;
     }
 
@@ -57,5 +57,5 @@ public abstract class NomadKuboEventStreamHandler<TEventEntryContent> : INomadKu
     public abstract Task ResetEventStreamPositionAsync(CancellationToken cancellationToken);
 
     /// <inheritdoc />
-    public abstract Task ApplyEntryUpdateAsync(EventStreamEntry<Cid> streamEntry, TEventEntryContent updateEvent, CancellationToken cancellationToken);
+    public abstract Task ApplyEntryUpdateAsync(EventStreamEntry<DagCid> streamEntry, TEventEntryContent updateEvent, CancellationToken cancellationToken);
 }
