@@ -61,7 +61,7 @@ ipns://specs.ipfs.tech/ipfs/ipns-record/#overview
 ipfs://bafybeifugnn4vw5vmf4ehk5cqsqqeky4jujzhwy4vdutrx6bptgszswzey/ipns/ipns-record/#overview
 ```
 
-Above all else, the network can be partitioned, which means a "shared" state cannot achieve eventual consistency without replaying history to resolve conflicts.
+Above all else, the network can be partitioned, which means a "shared" state cannot achieve eventual consistency without replaying history to resolve conflicts or using eventually consistent datatypes like CDRTs.
 
 ### Many devices, one user
 
