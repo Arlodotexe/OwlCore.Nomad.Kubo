@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFrameworks>netstandard2.0;net8.0;net9.0;</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<LangVersion>12.0</LangVersion>
 		<WarningsAsErrors>nullable</WarningsAsErrors>
@@ -15,13 +15,17 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.15.0</Version>
+		<Version>0.15.1</Version>
 		<Product>OwlCore</Product>
 		<Description>Build a modifiable application domain across Kubo peers with eventual consistency. Cover the gap between "User device" and "User".</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.15.1 ---
+[Improvements]
+Added supports for net8.0 and net9.0 in addition to netstandard2.0.
+
 --- 0.15.0 ---
 [Breaking]
 Inherited and implemented breaking changes from OwlCore.Nomad 0.10.0.
@@ -218,7 +222,7 @@ Initial release of OwlCore.Nomad.Kubo.
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="logo.png">
+	  <None Include="logo.png">
 	    <Pack>True</Pack>
 	    <PackagePath>\</PackagePath>
 	  </None>
