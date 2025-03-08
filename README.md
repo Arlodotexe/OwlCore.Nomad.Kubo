@@ -1,10 +1,8 @@
 # OwlCore.Nomad.Kubo [![Version](https://img.shields.io/nuget/v/OwlCore.Nomad.Kubo.svg)](https://www.nuget.org/packages/OwlCore.Nomad.Kubo)
 
-Shared tooling for building Nomad-enabled applications on ipfs via Kubo.
+Build a distributed & modifiable application domain on ipfs via Kubo with eventual consistency.
 
 ## What is Nomad?
-
-Nomad enables distributing a modifiable application domain across a set of nodes with eventual consistency.
 
 Put simply, this library was built to help you easily cover the gap between "User device" and "User".
 
