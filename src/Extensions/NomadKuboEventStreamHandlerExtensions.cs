@@ -270,11 +270,11 @@ public static class NomadKuboEventStreamHandlerExtensions
             foreach (var entry in eventStreamEntries)
             {
                 Guard.IsNotNull(entry.Value);
-                Guard.IsNotNullOrWhiteSpace(entry.Value.Content?.ToString());
+                Guard.IsNotNullOrWhiteSpace(entry.Value.Content.ToString());
                 Guard.IsNotNullOrWhiteSpace(entry.Value.EventId);
                 Guard.IsNotNullOrWhiteSpace(entry.Value.TargetId);
-
-                if (entry.Value.EventId != ReservedEventIds.NomadEventStreamSourceAddEvent && entry.Value.EventId != ReservedEventIds.NomadEventStreamSourceRemoveEvent)
+                
+                if(!ReservedEventIds.GetAll().Contains(entry.Value.EventId))
                     yield return entry.Value;
             }
         }

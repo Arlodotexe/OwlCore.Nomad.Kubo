@@ -34,15 +34,35 @@ public record NomadKuboEventStreamHandlerConfig<TRoaming>
     public IKey? LocalKey { get; set; }
 
     /// <summary>
-    /// The key name used to publish the local event stream.
+    /// The key name used to create the local event stream key.
     /// </summary>
-    public required string LocalKeyName { get; set; }
+    public string? LocalKeyName { get; set; }
 
     /// <summary>
-    /// The key name used to published the roaming data.
+    /// The key name used to create the roaming data key.
     /// </summary>
-    public required string RoamingKeyName { get; set; }
+    public string? RoamingKeyName { get; set; }
 
+    /// <summary>
+    /// A boolean that represents whether the roaming value can be resolved (whether a roaming id is known) and whether it should be resolved (roaming value is not known).
+    /// </summary>
+    public bool CanAndShouldResolveRoamingValue => RoamingId is not null && RoamingValue is null;
+
+    /// <summary>
+    /// A boolean that indicates whether the local value can be resolved (whether a local key is known) and whether it should be resolved (local value is not known).
+    /// </summary>
+    public bool CanAndShouldResolveLocalValue => LocalKey is not null && LocalValue is null;
+    
+    /// <summary>
+    /// A boolean that indicates whether this object has a local key/value pair.
+    /// </summary>
+    public bool HasLocalKvp => LocalKey is not null && LocalValue is not null;
+  
+    /// <summary>
+    /// A boolean that indicates whether this config has local and roaming keys.
+    /// </summary>
+    public bool NoKeys => (LocalKey is null || RoamingKey is null) && (LocalKey is null == RoamingKey is null ? true : throw new InvalidOperationException("Either roaming or local key was null, but not both. This is an invalid configuration. Event stream handler configs and repositories are currently designed to have a 1:1 roaming/local KVP correspondence. See for details https://github.com/Arlodotexe/OwlCore.Nomad.Kubo/issues/8"));
+    
     /// <summary>
     /// Pre-resolved event stream entries for this handler. Optional.
     /// </summary>
