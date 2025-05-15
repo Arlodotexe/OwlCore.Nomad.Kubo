@@ -15,13 +15,46 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.15.1</Version>
+		<Version>0.16.0</Version>
 		<Product>OwlCore</Product>
 		<Description>Build a modifiable application domain across Kubo peers with eventual consistency. Cover the gap between "User device" and "User".</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.16.0 ---
+[Fixes]
+Fixed an issue where getting items via NomadKuboRepositoryBase.GetAsync(config) wouldn't order timestamps correctly before applying events, leading to invalid states in some cases where multiple devices are paired.
+
+[Breaking]
+NomadKeyHelpers.RoamingIdToNomadKeysAsync was renamed to NomadKeyHelpers.GetNomadKeysAsync.
+NomadKeyHelpers.GetNomadKeysAsync now takes a list of IKey instead of a Client to resolve them from.
+The third parameter of the NomadKeyGen.CreateAsync{TRoaming} method was changed from a string eventStreamLabel to a Func{IKey, IKey, string} getEventStreamLabel. This allows the event stream label to be generated based on the roaming and local keys, instead of being a static string.
+NomadKuboRepositoryBase now takes a collection of ManagedKeys instead of resolving them from the client.
+NomadKuboRepositoryBase now uses a collection of ManagedConfigs instead of a single SelfRoamingId property.
+NomadKuboRepositoryBase has a new abstract method GetExistingKeyNamesAsync that must be implemented by derived classes.
+The ReadOnlyFromHandlerConfig.ReadOnlyFromHandlerConfig delegate was superseded by an abstract method.
+The ModifiableFromHandlerConfig.ModifiableFromHandlerConfig delegate was superseded by an abstract method.
+NomadKuboRepository{TModifiable, TReadOnly, TRoaming, TEventEntryContent} is now an abstract class.
+NomadKuboRepository{TModifiable, TReadOnly, TRoaming, TEventEntryContent, TCreateParam} now implements CreateAsync in the base class.
+NomadKuboRepository.GetNewKeyNames was added as an abstract method that must be implemented by derived classes.
+NomadKuboRepository.GetNewEventStreamLabel was added as an abstract method that must be implemented by derived classes.
+NomadKuboRepository.GetInitialRoamingValue was added as an abstract method that must be implemented by derived classes.
+
+[Improvements]
+KeyExchange.PairWithEncryptedPubSubAsync now returns a tuple with a nullable SourceAddEventEntry and a nullable ImportedRoamingKvp tuple.
+KeyExchange.ExchangeRoamingKeyAsync now returns a nullable tuple with the received IPNS Key Cid and resolved ipns value CID. 
+KeyExchange.ExchangeLocalSourceAsync now returns a nullable EventStreamEntry{DagCid} with the new SourceAddEventEntry for the new received local source.
+KeyExchange.ReceiveLocalKeyAsync now returns EventStreamEntry{DagCid} with the new SourceAddEventEntry for the new received local source.
+KeyExchange.ReceiveRoamingKeyAsync now returns a tuple with the received IPNS Key Cid and resolved ipns value CID.
+
+[New]
+A get-only property NomadKuboEventStreamHandlerConfig{TRoaming}.CanAndShouldResolveRoamingValue was added.
+A get-only property NomadKuboEventStreamHandlerConfig{TRoaming}.CanAndShouldResolveLocalValue was added.
+A get-only property NomadKuboEventStreamHandlerConfig{TRoaming}.HasLocalKvp was added.
+A get-only property NomadKuboEventStreamHandlerConfig{TRoaming}.NoKeys was added.
+NomadKuboRepositoryBase.GetExistingConfigAsync was added and is implemented in the base class with code that was previously required as a delegate property.
+
 --- 0.15.1 ---
 [Improvements]
 Added supports for net8.0 and net9.0 in addition to netstandard2.0.
@@ -212,7 +245,7 @@ Initial release of OwlCore.Nomad.Kubo.
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.2" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
-		<PackageReference Include="OwlCore.Kubo" Version="0.20.1" />
+		<PackageReference Include="OwlCore.Kubo" Version="0.20.2" />
     	<PackageReference Include="OwlCore.Nomad" Version="0.10.1" />
 		<PackageReference Include="PolySharp" Version="1.15.0">
 		  <PrivateAssets>all</PrivateAssets>

@@ -39,7 +39,7 @@ public static class KeyExchange
     /// <param name="roomName">The name of the pubsub room to join for pairing.</param>
     /// <param name="password">The password to use for encrypting and decrypting pubsub messages.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task PairWithEncryptedPubSubAsync(KuboBootstrapper kubo, IKuboOptions kuboOptions, ICoreApi client, IGenericApi genericApi, GetOrCreateLocalKeyFromRoamingAsync getOrCreateLocalKeyAsync, bool isRoamingReceiver, string roamingKeyName, string roomName, string password, CancellationToken cancellationToken = default)
+    public static async Task<(EventStreamEntry<DagCid>? SourceAddEventEntry, (Cid IpnsCid, Cid ResolvedCid)? ImportedRoamingKvp)> PairWithEncryptedPubSubAsync(KuboBootstrapper kubo, IKuboOptions kuboOptions, ICoreApi client, IGenericApi genericApi, GetOrCreateLocalKeyFromRoamingAsync getOrCreateLocalKeyAsync, bool isRoamingReceiver, string roamingKeyName, string roomName, string password, CancellationToken cancellationToken = default)
     {
         // Setup encrypted pubsub
         var thisPeer = await genericApi.IdAsync(cancel: cancellationToken);
@@ -52,7 +52,7 @@ public static class KeyExchange
         // Local key must be initialized prior to pairing
         // Roaming key must exist on the 'roaming sender' node, must not exist on 'roaming receiver' node.
         // The node that receives a roaming key should be a sender for local key, and vice versa.
-        await KeyExchange.ExchangeRoamingKeyAsync(peerRoom, roamingKeyName, isReceiver: isRoamingReceiver, kubo, kuboOptions, client, cancellationToken);
+        var receivedRoamingData = await KeyExchange.ExchangeRoamingKeyAsync(peerRoom, roamingKeyName, isReceiver: isRoamingReceiver, kubo, kuboOptions, client, cancellationToken);
 
         var enumerable = await client.Key.ListAsync(cancellationToken);
         var keys = enumerable as IKey[] ?? enumerable.ToArray();
@@ -65,7 +65,9 @@ public static class KeyExchange
 
         // The node that sends a roaming key should be receiver for local key, and vice versa.
         var isLocalReceiver = !isRoamingReceiver;
-        await KeyExchange.ExchangeLocalSourceAsync(peerRoom, localKey, roamingKeyName, isReceiver: isLocalReceiver, kuboOptions, client, cancellationToken);
+        var receivedLocalData = await KeyExchange.ExchangeLocalSourceAsync(peerRoom, localKey, roamingKeyName, isReceiver: isLocalReceiver, kuboOptions, client, cancellationToken);
+
+        return (receivedLocalData, receivedRoamingData);
     }
     
     /// <summary>
@@ -81,7 +83,7 @@ public static class KeyExchange
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
     /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task ExchangeRoamingKeyAsync(PeerRoom peerRoom, string roamingKeyName, bool isReceiver, KuboBootstrapper kuboBootstrapper, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    public static async Task<(Cid IpnsCid, Cid ResolvedCid)?> ExchangeRoamingKeyAsync(PeerRoom peerRoom, string roamingKeyName, bool isReceiver, KuboBootstrapper kuboBootstrapper, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
     {
         peerRoom.HeartbeatEnabled = false;
         peerRoom.HeartbeatMessage = roamingKeyName;
@@ -96,7 +98,7 @@ public static class KeyExchange
             _ = await peerRoom.WaitForJoinAsync(cancellationToken);
             peerRoom.HeartbeatEnabled = true;
             
-            await receivedKeyTask;
+            return await receivedKeyTask;
         }
         else
         {
@@ -106,6 +108,7 @@ public static class KeyExchange
             // Joiners should be ready to receive, wait for join and send.
             _ = await peerRoom.WaitForJoinAsync(cancellationToken);
             await KeyExchange.SendRoamingKeyAsync(peerRoom, kuboBootstrapper, roamingKeyName, cancellationToken);
+            return null;
         }
     }
 
@@ -122,7 +125,7 @@ public static class KeyExchange
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
     /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task ExchangeLocalSourceAsync(PeerRoom peerRoom, IKey localKey, string roamingKeyName, bool isReceiver, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    public static async Task<EventStreamEntry<DagCid>?> ExchangeLocalSourceAsync(PeerRoom peerRoom, IKey localKey, string roamingKeyName, bool isReceiver, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
     {
         peerRoom.HeartbeatEnabled = false;
         peerRoom.HeartbeatMessage = localKey.Name;
@@ -142,7 +145,7 @@ public static class KeyExchange
             _ = await peerRoom.WaitForJoinAsync(cancellationToken);
             peerRoom.HeartbeatEnabled = true;
             
-            await receivedKeyTask;
+            return await receivedKeyTask;
         }
         else
         {
@@ -151,6 +154,7 @@ public static class KeyExchange
             
             _ = await peerRoom.WaitForJoinAsync(cancellationToken);
             await KeyExchange.SendLocalSourceAsync(peerRoom, localKey.Id, cancellationToken);
+            return null;
         }
     }
     
@@ -180,16 +184,16 @@ public static class KeyExchange
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
     /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task ReceiveLocalKeyAsync(PeerRoom room, Cid roamingKeyId, Cid localKeyId, string localKeyName, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
+    public static async Task<EventStreamEntry<DagCid>> ReceiveLocalKeyAsync(PeerRoom room, Cid roamingKeyId, Cid localKeyId, string localKeyName, IKuboOptions kuboOptions, ICoreApi client, CancellationToken cancellationToken)
     {
-        var taskCompletionSource = new TaskCompletionSource<object?>();
+        var taskCompletionSource = new TaskCompletionSource<EventStreamEntry<DagCid>>();
 
         room.MessageReceived += OnMessageReceived;
         
 #if NET5_0_OR_GREATER
-        await taskCompletionSource.Task.WaitAsync(cancellationToken);
+        return await taskCompletionSource.Task.WaitAsync(cancellationToken);
 #elif NETSTANDARD
-        await taskCompletionSource.Task;
+        return await taskCompletionSource.Task;
 #endif
         
         // Receive and import local key from other node
@@ -226,7 +230,7 @@ public static class KeyExchange
             await client.Name.PublishAsync(updatedLocalEventStreamCid, key: localKeyName, lifetime: kuboOptions.IpnsLifetime, cancellationToken);
                 
             // Finished
-            taskCompletionSource.SetResult(null);
+            taskCompletionSource.SetResult(eventEntry);
         }
     }
 
@@ -239,16 +243,16 @@ public static class KeyExchange
     /// <param name="client">The client to use for communicating with ipfs.</param>
     /// <param name="kuboOptions">Options for data published to ipfs.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public static async Task ReceiveRoamingKeyAsync(PeerRoom room, KuboBootstrapper kuboBootstrapper, string roamingKeyName, ICoreApi client, IKuboOptions kuboOptions, CancellationToken cancellationToken)
+    public static async Task<(Cid IpnsCid, Cid ResolvedIpnsCid)> ReceiveRoamingKeyAsync(PeerRoom room, KuboBootstrapper kuboBootstrapper, string roamingKeyName, ICoreApi client, IKuboOptions kuboOptions, CancellationToken cancellationToken)
     {
-        var taskCompletionSource = new TaskCompletionSource<object?>();
+        var taskCompletionSource = new TaskCompletionSource<(Cid IpnsCid, Cid ResolvedIpnsCid)>();
 
         room.MessageReceived += OnMessageReceived;
         
 #if NET5_0_OR_GREATER
-        await taskCompletionSource.Task.WaitAsync(cancellationToken);
+        return await taskCompletionSource.Task.WaitAsync(cancellationToken);
 #elif NETSTANDARD
-        await taskCompletionSource.Task;
+        return await taskCompletionSource.Task;
 #endif
         
         // import roaming from other node
@@ -279,7 +283,7 @@ public static class KeyExchange
             Logger.LogInformation($"Republished imported key to {resolvedCid}");
 
             // Finished
-            taskCompletionSource.SetResult(null);
+            taskCompletionSource.SetResult((output, resolvedCid));
         }
     }
 
