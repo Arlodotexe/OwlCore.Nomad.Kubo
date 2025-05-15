@@ -191,7 +191,7 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
         cancellationToken.ThrowIfCancellationRequested();
 
         // Iterate through the managed configs to find the one with the specified roaming ID.
-        var existingManagedConfig = ManagedConfigs.FirstOrDefault(x => x.RoamingId == id);
+        var existingManagedConfig = ManagedConfigs.FirstOrDefault(x => x.RoamingId?.ToString() == id);
         if (existingManagedConfig is not null)
             return await GetAsync(existingManagedConfig, cancellationToken);
 
