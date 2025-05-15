@@ -198,8 +198,8 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
         // If given roaming id isn't managed by this repo, construct a config using roaming id, key names (if any) and ManagedKeys.
         var config = await GetExistingConfigAsync(id, cancellationToken);
 
-        // Return read-only if keys aren't found.
         // Return modifiable if keys are found.
+        // Return read-only if keys aren't found.
         // Data should not be null when key is null (readonly)
         //  - Key should be null when the node is unpaired, which means to create a read-only instance.
         //  - Data must be supplied to create read-only instance, must be pre-populated.
