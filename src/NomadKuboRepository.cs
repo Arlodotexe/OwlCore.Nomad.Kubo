@@ -32,7 +32,7 @@ public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEve
     /// Gets the initial roaming value for a given set of newly created keys.
     /// </summary>
     public abstract TRoaming GetInitialRoamingValue(TCreateParam createParam, IKey roamingKey, IKey localKey);
-    
+
     /// <inheritdoc/>
     public virtual async Task<TModifiable> CreateAsync(TCreateParam createParam, CancellationToken cancellationToken)
     {
@@ -41,7 +41,14 @@ public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEve
         var keyNames = GetNewKeyNames(createParam);
         var existingConfig = ManagedConfigs.FirstOrDefault(x => x.LocalKeyName == keyNames.LocalKeyName && x.RoamingKeyName == keyNames.RoamingKeyName);
         var config = existingConfig ?? GetEmptyConfig();
-        
+
+        // If an instance cache is set, check if the instance already exists.
+        if (InstanceCache is not null && config.RoamingId is not null && InstanceCache.TryGetValue(config.RoamingId, out var cachedInstance))
+        {
+            // If it exists, return the cached instance.
+            return (TModifiable)cachedInstance;
+        }
+
         config.LocalKeyName = keyNames.LocalKeyName;
         config.RoamingKeyName = keyNames.RoamingKeyName;
         config.LocalKey = ManagedKeys.FirstOrDefault(x => x.Name == keyNames.LocalKeyName);
@@ -56,21 +63,22 @@ public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEve
         {
             // Key doesn't exist, create it and return data.
             var (local, roaming) = await NomadKeyGen.CreateAsync(keyNames.LocalKeyName, keyNames.RoamingKeyName, (l, r) => GetNewEventStreamLabel(createParam, r, l), (l, r) => GetInitialRoamingValue(createParam, r, l), Client, cancellationToken);
-            
+
             // Data isn't published and won't resolve.
             // The known default value must be passed around manually
             // until it is ready to be published.
             config.RoamingId = roaming.Key.Id;
-            config.LocalKey = local.Key;
-            config.RoamingKey = roaming.Key;
+            config.LocalKey = new(local.Key);
+            config.RoamingKey = new(roaming.Key);
             config.LocalValue = local.Value;
             config.RoamingValue = roaming.Value;
 
             // To avoid resolving the unpublished local ipns key, set the resolved entries to empty.
             config.ResolvedEventStreamEntries = [];
-            
-            ManagedKeys.Add(local.Key);
-            ManagedKeys.Add(roaming.Key);
+            config.Sources.Add(local.Key.Id);
+
+            ManagedKeys.Add(new(local.Key));
+            ManagedKeys.Add(new(roaming.Key));
             ManagedConfigs.Add(config);
         }
 
@@ -79,7 +87,13 @@ public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEve
         // Created default or retrieved values are used.
         // Reuse existing handler config instance (for new unpublished data)
         var modifiable = (TModifiable)await GetAsync(config, cancellationToken);
-        
+
+        // If instance cache is set, add the modifiable instance to it.
+        if (InstanceCache is not null)
+        {
+            InstanceCache[config.RoamingId.ToString()] = modifiable;
+        }
+
         // Only raise collection modified if something new was set up
         if (needsKeySetup)
         {
@@ -130,9 +144,9 @@ public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEve
 
         config.LocalKeyName = keyNames.LocalKeyName;
         config.RoamingKeyName = keyNames.RoamingKeyName;
-        config.LocalKey = ManagedKeys.FirstOrDefault(x=> x.Name == keyNames.LocalKeyName);
-        config.RoamingKey = ManagedKeys.FirstOrDefault(x=> x.Name == keyNames.RoamingKeyName);
-        
+        config.LocalKey = ManagedKeys.FirstOrDefault(x => x.Name == keyNames.LocalKeyName);
+        config.RoamingKey = ManagedKeys.FirstOrDefault(x => x.Name == keyNames.RoamingKeyName);
+
         // If local is null, roaming should be too, and vice versa
         Guard.IsEqualTo(config.LocalKey is null, config.RoamingKey is null);
 
@@ -147,16 +161,16 @@ public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEve
             // The known default value must be passed around manually
             // until it is ready to be published.
             config.RoamingId = roaming.Key.Id;
-            config.LocalKey = local.Key;
-            config.RoamingKey = roaming.Key;
+            config.LocalKey = new(local.Key);
+            config.RoamingKey = new(roaming.Key);
             config.LocalValue = local.Value;
             config.RoamingValue = roaming.Value;
 
             // To avoid resolving an unpublished ipns key, set the resolved entries to empty.
             config.ResolvedEventStreamEntries = [];
-            
-            ManagedKeys.Add(local.Key);
-            ManagedKeys.Add(roaming.Key);
+
+            ManagedKeys.Add(new(local.Key));
+            ManagedKeys.Add(new(roaming.Key));
             ManagedConfigs.Add(config);
         }
 
@@ -165,7 +179,7 @@ public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEve
         // Created default or retrieved values are used.
         // Reuse existing handler config instance (for new unpublished data)
         var modifiable = (TModifiable)await GetAsync(config, cancellationToken);
-        
+
         // Only raise collection modified if something new was set up
         if (needsKeySetup)
         {

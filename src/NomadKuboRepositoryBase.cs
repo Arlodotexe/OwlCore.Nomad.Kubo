@@ -27,12 +27,24 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
     /// <summary>
     /// The config objects for event stream handlers whose lifecycles are managed by this repository.
     /// </summary>
-    public ICollection<NomadKuboEventStreamHandlerConfig<TRoaming>> ManagedConfigs { get; protected set; } = [];
+    public required ICollection<NomadKuboEventStreamHandlerConfig<TRoaming>> ManagedConfigs { get; init; }
 
     /// <summary>
     /// The keys that this node operator has access to.
     /// </summary>
-    public required ICollection<IKey> ManagedKeys { get; init; } = new List<IKey>();
+    public required ICollection<Key> ManagedKeys { get; init; }
+
+    /// <summary>
+    /// A collection of instances that are created or yielded by this repository. This is only used if set.
+    /// </summary>
+    /// <remarks>
+    /// Many event stream handlers yield other event stream handler instances on C# events as the event stream entries are applied. 
+    /// <para/>
+    /// For event stream handlers with mutual references to each other, this circular reference can lead to an infinitely recursive instantiation loop since event stream entries are always applied on instantiation.
+    /// <para/>
+    /// This collection is used to cache those instances so that they can be reused instead of re-instantiated every time, fixing the issue with mutual references between event stream handlers.
+    /// </remarks>
+    public virtual Dictionary<string, TReadOnly>? InstanceCache { get; init; } = null;
 
     /// <summary>
     /// Creates a new empty instance of <see cref="NomadKuboEventStreamHandlerConfig{TRoaming}"/> to use or manage in this repository.
@@ -54,7 +66,7 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
     {
         var keyNames = await GetExistingKeyNamesAsync(roamingId, cancellationToken);
         keyNames ??= (string.Empty, string.Empty);
-        
+
         // The GetNomadKeysAsync helper method does three things:
         // ------------------------------------
         // Finds roaming key by a given roaming key id
@@ -70,9 +82,9 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
 
         var config = GetEmptyConfig();
         config.RoamingId = roamingKey?.Id ?? (foundRoamingId is not null ? Cid.Decode(foundRoamingId) : null);
-        config.RoamingKey = roamingKey;
+        config.RoamingKey = roamingKey is null ? null : new(roamingKey);
         config.RoamingKeyName = roamingKey?.Name;
-        config.LocalKey = localKey;
+        config.LocalKey = localKey is null ? null : new(localKey);
         config.LocalKeyName = localKey?.Name;
         return config;
     }
@@ -83,7 +95,7 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
     /// <param name="roamingId">The ID of the roaming key to retrieve the local and roaming key names of.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
     public abstract Task<(string LocalKeyName, string RoamingKeyName)?> GetExistingKeyNamesAsync(string roamingId, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Constructs a read-only instance from a handler configuration.
     /// </summary>
@@ -93,7 +105,7 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
     /// Constructs a modifiable instance from a handler configuration.
     /// </summary>
     public abstract TModifiable ModifiableFromHandlerConfig(NomadKuboEventStreamHandlerConfig<TRoaming> handlerConfig);
-    
+
     /// <inheritdoc/>
     public virtual event EventHandler<TReadOnly[]>? ItemsAdded;
 
@@ -109,24 +121,35 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
     public virtual async Task<TReadOnly> GetAsync(NomadKuboEventStreamHandlerConfig<TRoaming> config, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        
+        Guard.IsNotNull(config.RoamingId);
+
+        if (InstanceCache is not null)
+        {
+            if (InstanceCache.TryGetValue(config.RoamingId.ToString(), out var cachedInstance))
+            {
+                Logger.LogTrace($"Returning cached instance of type '{cachedInstance.GetType()}' for {config.RoamingId}.");
+                return cachedInstance;
+            }
+        }
+
         // Resolve roaming value if needed.
         // If roaming value is missing but the key is not, it may be published
         // Roaming value should always be provided on creation (when unpublished)
         if (config.CanAndShouldResolveRoamingValue)
         {
-            Guard.IsNotNull(config.RoamingId);
+            Logger.LogTrace($"Resolving roaming value for {config.RoamingId}.");
             var (resolvedRoamingValue, _) = await Client.ResolveDagCidAsync<TRoaming>(config.RoamingId, nocache: !KuboOptions.UseCache, cancellationToken);
             config.RoamingValue = resolvedRoamingValue;
+        }
 
-            // In this state, the local value may also be missing but resolvable.
-            // Resolve local value if needed.
-            if (config.CanAndShouldResolveLocalValue)
-            {
-                Guard.IsNotNull(config.LocalKey);
-                var (resolvedLocalEventStream, _) = await Client.ResolveDagCidAsync<EventStream<DagCid>>(config.LocalKey.Id, nocache: !KuboOptions.UseCache, cancellationToken);
-                config.LocalValue = resolvedLocalEventStream;
-            }
+        // Resolve local value if needed.
+        // In this state, the local value may also be missing but resolvable.
+        if (config.CanAndShouldResolveLocalValue)
+        {
+            Guard.IsNotNull(config.LocalKey);
+            Logger.LogTrace($"Resolving local value for {config.LocalKey.Id}.");
+            var (resolvedLocalEventStream, _) = await Client.ResolveDagCidAsync<EventStream<DagCid>>(config.LocalKey.Id, nocache: !KuboOptions.UseCache, cancellationToken);
+            config.LocalValue = resolvedLocalEventStream;
         }
 
         // If the local event stream key/value pair are missing, assume readonly.
@@ -135,9 +158,16 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
         {
             // An "in-memory" state is required at the callsite where ReadOnly is constructed.
             Guard.IsNotNull(config.RoamingValue);
-            Guard.IsNotNull(config.RoamingId);
-            
-            return ReadOnlyFromHandlerConfig(config);
+
+            TReadOnly readOnly = ReadOnlyFromHandlerConfig(config);
+
+            if (InstanceCache is not null)
+            {
+                Logger.LogTrace($"Caching instance of type '{readOnly.GetType()}' for {config.RoamingId}.");
+                InstanceCache[config.RoamingId.ToString()] = readOnly;
+            }
+
+            return readOnly;
         }
 
         // Resolved entries list must be initialized before instantiating handlers.
@@ -155,22 +185,30 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
         var modifiable = ModifiableFromHandlerConfig(config);
         if (resolvedEntriesWasNull)
         {
-            // Resolve entries and advance event stream.
+            Logger.LogTrace($"Resolving event stream entries for {config.RoamingId}.");
             await foreach (var entry in modifiable.ResolveEventStreamEntriesAsync(cancellationToken)
                                .Where(x => (x.TimestampUtc ?? ThrowHelper.ThrowArgumentNullException<DateTime>()) <= DateTime.UtcNow)
                                .OrderBy(x => x.TimestampUtc)
                                .WithCancellation(cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                Logger.LogTrace($"Resolved event stream entry {entry.EventId} for {config.RoamingId} at {entry.TimestampUtc}.");
 
                 if (modifiable.EventStreamHandlerId == entry.TargetId)
+                {
                     await modifiable.AdvanceEventStreamAsync(entry, cancellationToken);
+                }
+                else
+                {
+                    Logger.LogWarning($"Event stream entry {entry.EventId} for {config.RoamingId} does not match the event stream handler ID {modifiable.EventStreamHandlerId} and will not be applied.");
+                }
 
                 config.ResolvedEventStreamEntries.Add(entry);
             }
         }
         else
         {
+            Logger.LogTrace($"Using existing event stream entries for {config.RoamingId}.");
             foreach (var entry in config.ResolvedEventStreamEntries
                          .Where(x => (x.TimestampUtc ?? ThrowHelper.ThrowArgumentNullException<DateTime>()) <= DateTime.UtcNow)
                          .OrderBy(x => x.TimestampUtc))
@@ -180,6 +218,13 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
                 if (modifiable.EventStreamHandlerId == entry.TargetId)
                     await modifiable.AdvanceEventStreamAsync(entry, cancellationToken);
             }
+        }
+
+        // If the instance cache is set, add the modifiable instance to it.
+        if (InstanceCache is not null && !InstanceCache.ContainsKey(config.RoamingId.ToString()))
+        {
+            Logger.LogTrace($"Caching instance of type '{modifiable.GetType()}' for {config.RoamingId}.");
+            InstanceCache[config.RoamingId.ToString()] = modifiable;
         }
 
         return modifiable;
@@ -214,7 +259,7 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
         foreach (var managedConfig in ManagedConfigs)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            Logger.LogInformation($"Getting event stream handler for roaming key {managedConfig}.");
+            Logger.LogTrace($"Getting event stream handler for roaming key {managedConfig.RoamingId}.");
 
             // Get the roaming id for this node.
             Guard.IsNotNull(managedConfig.RoamingId);
@@ -236,12 +281,12 @@ public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, 
 
         Guard.IsNotNull(config.RoamingKeyName);
         Guard.IsNotNull(config.LocalKeyName);
-        Logger.LogInformation($"Deleting roaming key {config.RoamingKeyName} and local key {config.LocalKeyName}.");
-        
+        Logger.LogTrace($"Deleting roaming key {config.RoamingKeyName} and local key {config.LocalKeyName}.");
+
         // Delete the roaming and local keys
         await Client.Key.RemoveAsync(config.RoamingKeyName, cancellationToken);
         await Client.Key.RemoveAsync(config.LocalKeyName, cancellationToken);
-        
+
         ManagedConfigs.Remove(existingManagedConfig);
         ItemsRemoved?.Invoke(this, [item]);
     }

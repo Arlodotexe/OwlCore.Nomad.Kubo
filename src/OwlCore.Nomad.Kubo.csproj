@@ -15,13 +15,30 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.16.0</Version>
+		<Version>0.17.0</Version>
 		<Product>OwlCore</Product>
 		<Description>Build a modifiable application domain across Kubo peers with eventual consistency. Cover the gap between "User device" and "User".</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Kubo</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.17.0 ---
+[Breaking]
+NomadKuboRepositoryBase.ManagedConfigs is now a required property.
+NomadKuboRepositoryBase.ManagedKeys is now of type ICollection{OwlCore.Kubo.Key} instead of ICollection{Ipfs.IKey}.
+NomadKuboEventStreamHandlerConfig{TRoaming}.RoamingKey is now of type OwlCore.Kubo.Key instead of Ipfs.IKey.
+NomadKuboEventStreamHandlerConfig{TRoaming}.LocalKey is now of type OwlCore.Kubo.Key instead of Ipfs.IKey.
+
+[Improvements]
+NomadKuboEventStreamHandlerConfig is now fully serializable and deserializable via Newtonsoft.Json, allowing it to be directly used to store and load the data managed by a repository.
+OwlCore.Diagnostics trace logging has been added to NomadKuboRepositoryBase for various methods.
+NomadKuboRepositoryBase.GetAsync now internally resolves the local value independently of whether the roaming value was resolved.
+
+[New]
+NomadKuboRepositoryBase (and subsequently NomadKuboRepository) now has an InstanceCache property. When assigned, this is used to store and resolve already instantiated event stream handlers. This is required for event stream handlers that mutually reference each other in their event stream and also emit those instances while the event stream is advancing. 
+Added NomadKuboEventStreamHandlerConfig{TRoaming}.Sources. Previously, sources were stored and read from the RoamingValue, but this has been separated out to improve data handling at the repository level. Event stream handlers should be given a reference to this list of sources, rather than from the roaming value.
+NomadKuboEventStreamHandlerExtensions.ResolveEventStreamEntriesAsync now has a guard throw to ensure the provided sources on the event stream handler isn't empty. A modifiable event stream should always have at least a local source, even the source has no entries yet.
+
 --- 0.16.0 ---
 [Fixes]
 Fixed an issue where getting items via NomadKuboRepositoryBase.GetAsync(config) wouldn't order timestamps correctly before applying events, leading to invalid states in some cases where multiple devices are paired.
@@ -245,7 +262,7 @@ Initial release of OwlCore.Nomad.Kubo.
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.2" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
-		<PackageReference Include="OwlCore.Kubo" Version="0.20.2" />
+		<PackageReference Include="OwlCore.Kubo" Version="0.21.0" />
     	<PackageReference Include="OwlCore.Nomad" Version="0.10.1" />
 		<PackageReference Include="PolySharp" Version="1.15.0">
 		  <PrivateAssets>all</PrivateAssets>
