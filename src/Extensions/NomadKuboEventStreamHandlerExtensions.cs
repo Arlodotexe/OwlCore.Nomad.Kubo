@@ -165,8 +165,11 @@ public static class NomadKuboEventStreamHandlerExtensions
         // Resolve initial sources
         var sourceEvents = new Dictionary<Cid, Dictionary<DagCid, EventStreamEntry<DagCid>>>();
 
+        Guard.IsNotEmpty(eventStreamHandler.Sources);
         foreach (var source in eventStreamHandler.Sources)
+        {
             sourceEvents.Add(source, []);
+        }
 
         // Track sources that shouldn't be yielded
         // Remove from this if source is re-added
@@ -190,6 +193,7 @@ public static class NomadKuboEventStreamHandlerExtensions
 
             // Resolve and collect event stream entries
             var entriesDict = sourceKvp.Value;
+            Logger.LogTrace($"Enumerating {eventStream.Entries.Count} entries for source {sourceCid} on event stream handler {eventStreamHandler.EventStreamHandlerId}");
             foreach (var entryCid in eventStream.Entries)
             {
                 Guard.IsNotNullOrWhiteSpace(entryCid?.ToString());
@@ -212,7 +216,7 @@ public static class NomadKuboEventStreamHandlerExtensions
                     if (eventStreamHandler.Sources.All(x => x != entryContent))
                     {
                         eventStreamHandler.Sources.Add(entryContent);
-                        Logger.LogInformation($"Added source {entryContent} to event stream handler {eventStreamHandler.EventStreamHandlerId}");
+                        Logger.LogTrace($"Added source {entryContent} to event stream handler {eventStreamHandler.EventStreamHandlerId}");
                     }
 
                     // Add to queue
@@ -224,13 +228,13 @@ public static class NomadKuboEventStreamHandlerExtensions
                     if (!sourceEvents.ContainsKey(newKvp.Key))
                         sourceEvents.Add(newKvp.Key, newKvp.Value);
 
-                    Logger.LogInformation($"Enqueued new source {newKvp.Key} for entry resolution");
+                    Logger.LogTrace($"Enqueued new source {newKvp.Key} for entry resolution");
 
                     // Unmark as removed if needed
                     if (removedSources.Any(x => x == entryContent))
                     {
                         removedSources.Remove(entryContent);
-                        Logger.LogInformation($"Unmarked source {entryContent} as removed {eventStreamHandler.EventStreamHandlerId}");
+                        Logger.LogTrace($"Unmarked source {entryContent} as removed {eventStreamHandler.EventStreamHandlerId}");
                     }
                 }
                 // Removed source
@@ -240,7 +244,7 @@ public static class NomadKuboEventStreamHandlerExtensions
 
                     if (eventStreamHandler.Sources.Contains(entryContent))
                     {
-                        Logger.LogInformation($"Removed source {entryContent} from event stream handler {eventStreamHandler.EventStreamHandlerId}");
+                        Logger.LogTrace($"Removed source {entryContent} from event stream handler {eventStreamHandler.EventStreamHandlerId}");
                         eventStreamHandler.Sources.Remove(entryContent);
                     }
 
@@ -248,7 +252,7 @@ public static class NomadKuboEventStreamHandlerExtensions
                     // Rather than removing the event stream source and entries,
                     // mark as 'removed' and don't yield.
                     removedSources.Add(entry.Content);
-                    Logger.LogInformation($"Marked source {entry.Content} as removed {eventStreamHandler.EventStreamHandlerId}");
+                    Logger.LogTrace($"Marked source {entry.Content} as removed {eventStreamHandler.EventStreamHandlerId}");
                 }
             }
         }
@@ -263,7 +267,7 @@ public static class NomadKuboEventStreamHandlerExtensions
             // Exclude removed (not re-added) sources
             if (removedSources.Contains(sourceCid))
             {
-                Logger.LogWarning($"Event stream source {sourceCid} was marked as removed, skipping");
+                Logger.LogTrace($"Event stream source {sourceCid} was marked as removed, skipping");
                 continue;
             }
 
