@@ -108,8 +108,8 @@ Interaction Characteristics:
 - Given a roaming ID, different config objects can be used based on the context.
 
 Most repositories are created using the inbox [`NomadKuboRepository`](https://github.com/Arlodotexe/OwlCore.Nomad.Kubo/blob/ed523a9397913ad2eade2f61419743d740d0b6ac/src/NomadKuboRepository.cs#L28), for which example usage can be found in public implementations:
-- [`StorageRepoFactory`](https://github.com/Arlodotexe/OwlCore.Nomad.Storage.Kubo/blob/main/src/StorageRepoFactory.cs) from `OwlCore.Nomad.Storage.Kubo`.
-- [`PeerSwarmRepoFactory`](https://github.com/Arlodotexe/OwlCore.Nomad.Kubo.PeerSwarm/blob/main/src/PeerSwarmRepoFactory.cs) from `OwlCore.Nomad.Kubo.PeerSwarm`.
+- [`RoamingFolderRepository`](https://github.com/Arlodotexe/OwlCore.Nomad.Storage.Kubo/blob/main/src/RoamingFolderRepository.cs) from `OwlCore.Nomad.Storage.Kubo`.
+- [`PeerSwarmTrackerRepository`](https://github.com/Arlodotexe/OwlCore.Nomad.Kubo.PeerSwarm/blob/main/src/PeerSwarmTrackerRepository.cs) from `OwlCore.Nomad.Kubo.PeerSwarm`.
 
 ## Registry
 
