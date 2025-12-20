@@ -77,6 +77,17 @@ It's an impractical and unrealistic requirement to treat a list of device-specif
 
 ## Solutions
 
+### Many devices, one user
+
+Our fix for eventual consistency also comes with the fix for publishing a single resolvable identifer.
+
+The "consolidated state" that is arrived at with eventual consistency is called the **roaming state**, and acts as the resolvable "per-operator" IPNS that represents changes made from all paired devices.
+
+This works across network partitions as well. If changes are made on two fully isolated partitions:
+- Any roaming data published to IPNS represents the "best known value" for that particular partition.  
+- The implementation knows how to handle any conflict resolution that might occur once partitions are joined.
+- Since publishing a roaming state requires computing it from event stream sources, the published roaming state is always (locally for that partition) conflict-resolved. 
+
 ### Eventual Consistency
 
 To arrive at eventual consistency across devices, *including* after network partitions and reconnects, we need to leverage the topology and processes given by content addressing and IPNS.
@@ -88,17 +99,6 @@ A "roaming" state is computed from a seed value by replaying and aggregating ind
 As peers come and go, publishing  peer-specific interactions with the application domain allows the consolidated state to eventually converge on each device without CDRTs or generalizable conflict resolution logic.
 
 Conflict resolution is effectively delegated to an implementation detail.
-
-### Many devices, one user
-
-Our fix for eventual consistency also comes with the fix for publishing a single resolvable identifer.
-
-The "consolidated state" that is arrived at with eventual consistency is called the **roaming state**, and acts as the resolvable "per-operator" IPNS that represents changes made from all paired devices.
-
-This works across network partitions as well. If changes are made on two fully isolated partitions:
-- Any roaming data published to IPNS represents the "best known value" for that particular partition.  
-- The implementation knows how to handle any conflict resolution that might occur once partitions are joined.
-- Since publishing a roaming state requires computing it from event stream sources, the published roaming state is always (locally for that partition) conflict-resolved. 
 
 ## Financing
 
