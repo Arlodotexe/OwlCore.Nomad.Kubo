@@ -118,4 +118,3 @@ Most repositories are created using the inbox [`NomadKuboRepository`](https://gi
 - Used to track data managed by others.
 - Instead of Create/Delete, uses Add/Remove.
 - Common pattern in "virtual" event stream handlers.
-- Interfaces for [`IModifiableNomadKuboRegistry`](https://github.com/Arlodotexe/OwlCore.Nomad.Kubo/blob/ed523a9397913ad2eade2f61419743d740d0b6ac/src/IModifiableNomadKuboRegistry.cs) and [`IReadOnlyNomadKuboRegistry`](https://github.com/Arlodotexe/OwlCore.Nomad.Kubo/blob/ed523a9397913ad2eade2f61419743d740d0b6ac/src/IReadOnlyNomadKuboRegistry.cs) are provided inbox, but are provided as a convenience for code consistency and nothing more.
