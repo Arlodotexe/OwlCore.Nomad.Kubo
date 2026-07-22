@@ -1,5 +1,6 @@
 using CommunityToolkit.Diagnostics;
 using Ipfs;
+using OwlCore.ComponentModel;
 
 namespace OwlCore.Nomad.Kubo;
 
@@ -11,7 +12,7 @@ namespace OwlCore.Nomad.Kubo;
 /// <typeparam name="TRoaming">The published roaming value type.</typeparam>
 /// <typeparam name="TEventEntryContent">The base content type of the event stream entries.</typeparam>
 /// <typeparam name="TCreateParam"></typeparam>
-public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEventEntryContent, TCreateParam> : NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, TEventEntryContent>, INomadKuboRepository<TModifiable, TReadOnly, TCreateParam>
+public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEventEntryContent, TCreateParam> : NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, TEventEntryContent>, IRepository<TModifiable, TReadOnly, TCreateParam>
     where TReadOnly : notnull
     where TModifiable : TReadOnly, INomadKuboEventStreamHandler<TEventEntryContent>
 {
@@ -111,7 +112,7 @@ public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEve
 /// <typeparam name="TReadOnly">The type of item that can be read from this repository.</typeparam>
 /// <typeparam name="TRoaming">The published roaming value type.</typeparam>
 /// <typeparam name="TEventEntryContent">The base content type of the event stream entries.</typeparam>
-public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEventEntryContent> : NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, TEventEntryContent>, INomadKuboRepository<TModifiable, TReadOnly>
+public abstract class NomadKuboRepository<TModifiable, TReadOnly, TRoaming, TEventEntryContent> : NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, TEventEntryContent>, IRepository<TModifiable, TReadOnly>
     where TReadOnly : notnull
     where TModifiable : TReadOnly, INomadKuboEventStreamHandler<TEventEntryContent>
 {

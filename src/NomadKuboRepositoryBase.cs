@@ -2,6 +2,7 @@
 using CommunityToolkit.Diagnostics;
 using Ipfs;
 using Ipfs.CoreApi;
+using OwlCore.ComponentModel;
 using OwlCore.Diagnostics;
 using OwlCore.Kubo;
 
@@ -10,7 +11,7 @@ namespace OwlCore.Nomad.Kubo;
 /// <summary>
 /// Represents a modifiable Kubo repository.
 /// </summary>
-public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, TEventEntryContent> : INomadKuboRepositoryBase<TModifiable, TReadOnly>
+public abstract class NomadKuboRepositoryBase<TModifiable, TReadOnly, TRoaming, TEventEntryContent> : IRepositoryBase<TModifiable, TReadOnly>
     where TReadOnly : notnull
     where TModifiable : TReadOnly, INomadKuboEventStreamHandler<TEventEntryContent>
 {
