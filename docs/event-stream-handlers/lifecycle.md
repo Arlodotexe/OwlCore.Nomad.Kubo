@@ -1,4 +1,4 @@
-## Lifecycle management via `IRepository`
+## Lifecycle management of Event Stream Handlers via `IRepository`
 
 ### Intent and purpose
 - New scenarios covered:

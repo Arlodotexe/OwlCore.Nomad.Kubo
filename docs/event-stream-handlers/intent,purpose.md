@@ -1,4 +1,4 @@
-## Intent and purpose
+## Intent and purpose of Event Stream Handlers
 
 ### New scenarios covered:
 - Publish the same data to the same public-facing ipns address *from multiple devices* without a persistent live connection between devices.

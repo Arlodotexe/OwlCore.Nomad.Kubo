@@ -1,4 +1,4 @@
-## How event stream handlers work
+## How Event Stream Handlers work
 
 ### Input:
 - One or more local event stream sources published per application per device on IPNS.
