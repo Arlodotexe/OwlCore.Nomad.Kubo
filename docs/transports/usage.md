@@ -1,5 +1,7 @@
 ## **Transports Usage**
 
+See [overview.md](./overview.md) if you haven't.
+
 ### Internet
 - WAN built into Kubo, including p2p NAT traversal
 
