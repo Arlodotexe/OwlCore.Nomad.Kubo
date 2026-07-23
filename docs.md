@@ -110,6 +110,7 @@ Select a link to expand the content previewed in the outline below it.
 
 ##### Sneakernet
 - TODO
+- ipfs/kubo repo itself is capable of being put onto a flash drive or external disk and "sneakernet" between machines before Nomad or any particular application is ever involved
 
 ### [**Concept Glossary (Terminology):**](./docs/glossary.md)
 - [ipfs](./docs/glossary/ipfs.md)
