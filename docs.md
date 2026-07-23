@@ -88,7 +88,7 @@ Thanks to the content-addressed nature of IPFS, Kubo supports WAN, LAN and Sneak
 Content-addressed data (IPFS blocks, IPLD protobufs, unixfs folders, and DHT entries like signed IPNS records) all intrinsically supports these transports, even if not yet supported by Kubo: 
 - Internet
     - Directly connecting two non-local machines with Kubo.
-    - WAN, ISP-routed, Town, City or Country scale networks or meshes
+    - WAN, ISP-routed, Town, City, Country, Continent or inter-continent scale networks or meshes
     - Reliability, access speed/frequency, and geography.
     - Connection locality and lifetime: Live global data transfer.
 - Intranet
