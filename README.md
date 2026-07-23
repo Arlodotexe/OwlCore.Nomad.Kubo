@@ -13,6 +13,7 @@ See also:
 - [IPFS Concept Glossary](docs/glossary/ipfs.md)
 - [Problems Faced](#problems-faced)
 - [Solutions](#solutions)
+- Expanded docs WIP at [docs.md](docs.md)
 
 ## Featuring:
 - Interfaces and models for building Nomad applications using Ipfs/Kubo.

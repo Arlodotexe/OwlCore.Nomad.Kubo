@@ -196,7 +196,7 @@ The value broadcast to the DHT includes a private key signature alongside the pu
 
 Using the public key in conjunction with the private key signature, we can cryptographically verify that the published value was signed by the private key.  
 
-This forms the basic of IPNS-- asymmetric encryption and content addressing.
+This forms the basis of IPNS-- asymmetric encryption and content addressing.
 
 Additionally, Kubo supplies experimental APIs for [signing](ipfs://bafybeihqzueokgapc75zpwoxl24byt6wiqi67x5opaefz7hxppbgqmcple/reference/kubo/rpc/#api-v0-key-sign) and [verifying](ipfs://bafybeihqzueokgapc75zpwoxl24byt6wiqi67x5opaefz7hxppbgqmcple/reference/kubo/rpc/#api-v0-key-verify) arbitrary bytes using existing IPNS keys. These aren't necessary for normal IPNS usage, but can be extraordinarily useful for more advanced setups. 
 

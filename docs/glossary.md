@@ -1,0 +1,26 @@
+**Concept Glossary (Terminology):**
+- [ipfs](./glossary/ipfs.md)
+    - Protocol Labs
+    - The IPFS Shipyard
+    - MultiFormats
+    - Content addressing
+    - IPLD
+        - Data Model, Codecs
+        - Linking
+        - CAR exporting
+    - IPFS
+    - Kubo
+    - IPNS
+- [nomad](./glossary/nomad.md)
+    - Event Stream Sourcing
+    - Local state
+    - Roaming state
+    - Event Stream Handlers
+    - Event Streams
+    - Event Stream Entries
+    - "Root" Event Stream Handler
+    - "Virtual" Event Stream Handler
+    - Repository
+    - Registry
+    - Operator
+

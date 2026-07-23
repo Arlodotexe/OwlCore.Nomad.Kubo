@@ -12,6 +12,7 @@
 - ["Virtual" Event Stream Handler](#virtual-event-stream-handler)
 - [Repository](#repository)
 - [Registry](#registry)
+- [Operator](#operator)
 
 ## Event Stream Sourcing
 
@@ -20,7 +21,7 @@ Event Sourcing and Event Streaming are established patterns that Nomad makes hea
 See also:
 - https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing
 
-Rather than using an existing library, we've crafted a custom event sourcing solution under the name [OwlCore.Nomad](https://github.com/Arlodotexe/OwlCore.Nomad).
+Rather than using an existing library, we've crafted our own event sourcing solution under the name [OwlCore.Nomad](https://github.com/Arlodotexe/OwlCore.Nomad).
 
 ## Local state
 
@@ -118,3 +119,13 @@ Most repositories are created using the inbox [`NomadKuboRepository`](https://gi
 - Used to track data managed by others.
 - Instead of Create/Delete, uses Add/Remove.
 - Common pattern in "virtual" event stream handlers.
+
+## Operator
+
+- Loose analogy for an entity representing a single end-user, an assembled group or organization, or both.
+- "Operator" is a shorthand way to say "node operator", as in "ipfs" nodes. 
+- An operator may own or control one or more ipfs nodes
+- An operator may have multiple ipfs nodes (one per application) on each device
+- An operator may have multiple distinct devices
+- An operator may want the nodes on their devices to coordinate without a server to facilitate an installed application's functionality.
+
