@@ -16,8 +16,8 @@
     - By the methods in:
         - [`NomadKuboRepository`](../../src/NomadKuboRepository.cs)`.CreateAsync` for brand-new modifiable-only local/roaming keys and instances, not yet paired to any other device.
         - [`NomadKuboRepositoryBase`](../../src/NomadKuboRepositoryBase.cs).`GetAsync` overloads for existing readonly (owned by other operator, no keys) or modifiable (owned by current operator, has keys) instances.
-    - Based on data in instances of [`NomadKuboEventStreamHandlerConfig.cs`](../../src/NomadKuboEventStreamHandlerConfig.cs) in [`NomadKuboRepositoryBase`](../../src/NomadKuboRepositoryBase.cs).`ManagedKeys`. 
-- Because of this, `ManagedKeys` can be used to scope repositories and all event stream handlers they create/retrieve to different individual operators on the same machine, such as in server-hosted scenarios (e.g. Discord bot where p2p is optional). 
+    - Based on data in instances of [`NomadKuboEventStreamHandlerConfig.cs`](../../src/NomadKuboEventStreamHandlerConfig.cs) in [`NomadKuboRepositoryBase`](../../src/NomadKuboRepositoryBase.cs).`ManagedConfigs` and `ManagedKeys`. 
+- Because of this, `ManagedConfigs` and `ManagedKeys` can be used to scope repositories and all event stream handlers they create/retrieve to different individual operators on the same machine, such as in server-hosted scenarios (e.g. Discord bot where p2p is optional). 
 - The created event stream handler knows nothing about the handler config that was used to configure its instantiation. 
 
 
