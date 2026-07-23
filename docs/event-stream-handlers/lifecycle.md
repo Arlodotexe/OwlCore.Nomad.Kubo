@@ -20,7 +20,12 @@
 - This allows `ManagedConfigs` and `ManagedKeys` to be used to scope repositories and subsequently all event stream handlers they create/retrieve to different individual operators on the same machine
     - Such as in server-hosted scenarios (e.g. Discord bot where p2p is optional). 
 - The instantiated event stream handler knows nothing about the `NomadKuboEventStreamHandlerConfig` that was used to configure it. 
-- `ManagedKeys` and `ManagedConfigs` properties and their `GetAsync` methods exist only on `NomadKuboRepositoryBase`, and are read from (after create/update), provided to (to restore after save/reset) and used by the repository internally to construct existing instances. 
+- `ManagedKeys` and `ManagedConfigs` properties and their `GetAsync` methods exist only on `NomadKuboRepositoryBase`, and are expected by the consuming application to:
+    - Read from them after create/update to persist them.
+        - Optionally scoped to some ID at a higher level
+        - See also [`StorageHostedRepository.cs`](https://github.com/WindowsAppCommunity/WindowsAppCommunity.Discord.ServerCompanion/blob/main/src/StorageHostedRepository.cs)/[`WacNomadRepoGroupRepository.cs`](https://github.com/WindowsAppCommunity/WindowsAppCommunity.Discord.ServerCompanion/blob/main/src/WacNomadRepoGroupRepository.cs). 
+    - Provide to them to restore after runtime save/reset. 
+    - Use them via the repository methods to construct instances of the data they represent.
 
 
 ### "Forking" another operator's event stream to diff a patch
