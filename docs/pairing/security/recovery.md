@@ -1,2 +1,2 @@
-- Security and recovery
+## Pairing Security and recovery
 

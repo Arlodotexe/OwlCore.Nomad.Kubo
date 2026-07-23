@@ -1,5 +1,6 @@
-## **Backups**:
-- [Data in a backup:](./backups/data.md)
+## [**Backups**:](./backups.md)
+
+### [Data in a backup:](./backups/data.md)
     - [`ManagedConfigs`](./backups/data/ManagedConfigs.md)
     - [Published IPNS records](./backups/data/ipns/public-records.md)
     - [Private IPNS keys](./backups/data/ipns/private-keys.md)

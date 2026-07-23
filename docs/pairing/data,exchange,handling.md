@@ -1,2 +1,2 @@
-- Data, exchange and handling
+## Pairing data, exchange and handling
 

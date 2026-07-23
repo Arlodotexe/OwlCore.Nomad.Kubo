@@ -1,6 +1,6 @@
-#### **Overview:**
+## **Transports Overview:**
 
-##### **Internet vs Intranet vs Sneakernet**:
+### **Internet vs Intranet vs Sneakernet**:
 - Internet
     - WAN, ISP-routed.
     - Reliability, access speed/frequency, and geography.
@@ -14,7 +14,7 @@
     - Reliability, access speed/frequency, and material.
     - Connection locality and lifetime: No live connection, direct transfer only.
 
-##### **Sneakernet vs exported backup**:
+### **Sneakernet vs exported backup**:
 - TODO
 - TBD
 

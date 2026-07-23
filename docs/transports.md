@@ -1,8 +1,8 @@
-### [**Transports**](./transports.md):
+## [**Transports**](./transports.md):
 
-#### [**Overview:**](./transports/overview.md)
+### [**Overview:**](./transports/overview.md)
 
-##### **Internet vs Intranet vs Sneakernet**:
+#### **Internet vs Intranet vs Sneakernet**:
 - Internet
     - WAN, ISP-routed.
     - Reliability, access speed/frequency, and geography.
@@ -16,19 +16,19 @@
     - Reliability, access speed/frequency, and material.
     - Connection locality and lifetime: No live connection, direct transfer only.
 
-##### **Sneakernet vs exported backup**:
+#### **Sneakernet vs exported backup**:
 - TODO
 - TBD
 
-#### [**Usage**](./transports/usage.md)
+### [**Usage**](./transports/usage.md)
 
-##### Internet
+#### Internet
 - WAN built into Kubo, including p2p NAT traversal
 
-##### Intranet
+#### Intranet
 - LAN built into Kubo (tcp, udp, quic, websockets, etc.)
 - Bluetooth, WiFi Direct, LoRA not built into Kubo
 
-##### Sneakernet
+#### Sneakernet
 - TODO
 

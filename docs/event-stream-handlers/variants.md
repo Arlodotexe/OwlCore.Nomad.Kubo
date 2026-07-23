@@ -1,4 +1,4 @@
-#### Event Stream Handler variants
+## Event Stream Handler variants
 - Root
     - New scenarios covered
     - How to code one
