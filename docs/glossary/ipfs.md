@@ -9,9 +9,11 @@
 	- [Data Model, Codecs](#data-model-codecs)
 	- [Linking](#linking)
 	- [CAR exporting](#car-exporting)
+    - [UnixFS](#unixfs)
 - [IPFS](#ipfs)
 - [Kubo](#kubo)
 - [IPNS](#ipns)
+- [DHT](#dht)
 
 These are technologies created by or heavily used by Protocol Labs or the IPFS Shipyard.
 
@@ -146,6 +148,18 @@ Reference links
 ipfs://bafybeigz7xdtojjcpufxkibctnslx5x3yhqffye5fc3hs4ftmk4p37drei/docs/intro/hello-world/
 ```
 
+### UnixFS
+
+UnixFS is a custom [data model codec](#data-model-codecs) and ADL that ships with Kubo and enables file system semantics on top of IPLD. 
+
+If you've ever viewed a file or folder, including websites, that were on ipfs, then you've used unixfs. 
+
+Reference links
+```
+https://specs.ipfs.tech/unixfs/
+ipfs://bafybeidlnb42fya674ft6rhu4idxeoslwpxnvjqkmjtib4evocr7yupp5e/unixfs/
+```
+
 ## IPFS
 
 IPFS stands for the "InterPlanetary File System", and is self-described as "an open system to manage data without a central server".
@@ -205,3 +219,20 @@ Reference links
 ipfs://bafybeihqzueokgapc75zpwoxl24byt6wiqi67x5opaefz7hxppbgqmcple/concepts/ipns/
 ```
 
+## DHT
+
+From ProbeLab:
+
+> One of the core components of IPFS is the Distributed Hash Table (DHT), which enables nodes to locate and retrieve content from other nodes on the network.
+> 
+> The IPFS DHT is a distributed key-value store that maps content addresses (aka CIDs) to the nodes that are currently storing that content.
+> 
+> It works by dividing the content address space into small, hash-based “buckets” that are distributed across the network. When a node wants to find a piece of content, it queries the DHT with the content’s CID, and the DHT returns the nodes that are currently storing that content, in the form of Provider Records.
+> 
+> This allows content to be located and retrieved in a decentralized, efficient, and fault-tolerant manner.
+
+
+See:
+- https://docs.ipfs.tech/concepts/dht/
+- https://probelab.io/ipfs/dht/
+- https://blog.ipfs.tech/2023-09-amino-refactoring/

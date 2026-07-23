@@ -12,10 +12,11 @@ Select a link to expand the content previewed in the outline below it.
     - Operator can make changes to the single public-facing ipns address from any owned device/node and they'll see it across all their connected devices while other operators see the "roaming" data published by all devices.
     - Keep public-facing "roaming" IPNS keys alive using all online and paired devices. 
 - Glossary references:
-    - "Operator" as a user analogy
-    - "Local state" as event streams used to create the roaming state
-    - "Roaming state" as data published for consumption by an application or another user.
-    - "IPNS" as the immutability layer over ipfs
+    - "[Operator](./docs/glossary/nomad.md#operator)" as a user analogy
+    - "[Local state](./docs/glossary/nomad.md#local-state)" as event streams used to create the roaming state
+    - "[Roaming state](./docs/glossary/nomad.md#roaming-state)" as data published for consumption by an application or another user.
+    - "[IPNS](./docs/glossary/ipfs.md#ipns)" as the immutability layer over [ipfs](./docs/glossary/ipfs.md#ipfs)
+
 
 #### [How they work](./docs/event-stream-handlers/how,explainer.md)
 - Input: One or more local event stream sources published per application per device on IPNS.
@@ -28,8 +29,8 @@ Select a link to expand the content previewed in the outline below it.
         - Streamline the instantiation, creation and deletion of event stream handlers.
         - Support for single-device many-operator (server-hosted data) scope isolation.
     - Glossary references:
-        - "Operator" as a user analogy
-        - "IRepository" as factory for modifiable vs readonly event stream handlers
+        - "[Operator](./docs/glossary/nomad.md#operator)" as a user analogy
+        - "[IRepository](./docs/glossary/nomad.md#repository)" as factory for modifiable vs readonly event stream handlers
 - Create, delete, get
     - Automatic ReadOnly vs Modifiable instances
 - Define known construct-able instances with `ManagedConfigs`
@@ -83,9 +84,9 @@ Select a link to expand the content previewed in the outline below it.
 
 ##### **Internet vs Intranet vs Sneakernet**:
 
-Thanks to the content-addressed nature of IPFS, Kubo supports WAN, LAN and Sneakernet out of the box and could be extended to support other transport mechanisms like Bluetooth, WiFi direct. 
+Thanks to the [content-addressed](./docs/glossary/ipfs.md#content-addressing) nature of [IPFS](./docs/glossary/ipfs.md#ipfs), [Kubo](./docs/glossary/ipfs.md#kubo) supports WAN, LAN and Sneakernet out of the box and could be extended to support other transport mechanisms like Bluetooth, WiFi direct. 
 
-Content-addressed data (IPFS blocks, IPLD protobufs, unixfs folders, and DHT entries like signed IPNS records) all intrinsically supports these transports, even if not yet supported by Kubo: 
+Content-addressed data (IPFS blocks, [IPLD](./docs/glossary/ipfs.md#ipld) protobufs, [unixfs](./docs/glossary/ipfs.md#unixfs) folders, and [DHT](./docs/glossary/ipfs.md#dht) entries like signed [IPNS records](./docs/glossary/ipfs.md#ipns)) all intrinsically supports these transports, even if not yet supported by Kubo: 
 - Internet
     - Directly connecting two non-local machines with Kubo.
     - WAN, ISP-routed, Town, City, Country, Continent or inter-continent scale networks or meshes
@@ -97,7 +98,7 @@ Content-addressed data (IPFS blocks, IPLD protobufs, unixfs folders, and DHT ent
     - Reliability, access speed/frequency, and environment.
     - Connection locality and lifetime: Live local-nearby data transfer, limited global connection.
 - Sneakernet
-    - Indirectly connecting two machines via portable media (USB, disk) to move content-addressed data between them via either a third Kubo repo or via sets of CAR export(s)/import(s).
+    - Indirectly connecting two machines via portable media (USB, disk) to move content-addressed data between them via either a third Kubo repo or via sets of [CAR](./docs/glossary/ipfs.md#car-exporting) export(s)/import(s).
     - USB, physical media.
     - Reliability, access speed/frequency, and material.
     - Connection locality and lifetime: No live connection, direct transfer only.
@@ -129,9 +130,11 @@ Content-addressed data (IPFS blocks, IPLD protobufs, unixfs folders, and DHT ent
         - Data Model, Codecs
         - Linking
         - CAR exporting
+        - UnixFS
     - IPFS
     - Kubo
     - IPNS
+    - DHT
 - [nomad](./docs/glossary/nomad.md)
     - Event Stream Sourcing
     - Local state

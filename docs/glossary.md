@@ -8,9 +8,11 @@
         - Data Model, Codecs
         - Linking
         - CAR exporting
+        - UnixFS
     - IPFS
     - Kubo
     - IPNS
+    - DHT
 - [nomad](./glossary/nomad.md)
     - Event Stream Sourcing
     - Local state
