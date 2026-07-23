@@ -1,10 +1,9 @@
-### **Backups**:
+## **Backups**:
 - [Data in a backup:](./backups/data.md)
-    - `ManagedConfigs`
-    - Published IPNS records
-    - Private IPNS keys
-    - Blocks (CARs)
-    - CARs in a backup
+    - [`ManagedConfigs`](./backups/data/ManagedConfigs.md)
+    - [Published IPNS records](./backups/data/ipns/public-records.md)
+    - [Private IPNS keys](./backups/data/ipns/private-keys.md)
+    - [Block sets (CARs)](./backups/data/CARs.md)
 - For each "Data in a backup", we ask: 
     - Where data lives
     - Who "owns" a backup
@@ -17,5 +16,6 @@
             - Data of another operator (linked or given)
             - Some or all adjacent resolvable ipns links in any given graph up to some depth. 
     - What can be done with backup data
-- [Importing and Exporting](./backups/importing,export.md)
+
+### [Importing and Exporting](./backups/importing,export.md)
 

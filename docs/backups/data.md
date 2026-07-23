@@ -1,9 +1,8 @@
-- Data in a backup:
-    - `ManagedConfigs`
-    - Published IPNS records
-    - Private IPNS keys
-    - Blocks (CARs)
-    - CARs in a backup
+- [Data in a backup:](./data.md)
+    - [`ManagedConfigs`](./data/ManagedConfigs.md)
+    - [Published IPNS records](./data/ipns/public-records.md)
+    - [Private IPNS keys](./data/ipns/private-keys.md)
+    - [Block sets (CARs)](./data/CARs.md)
 - For each "Data in a backup", we ask: 
     - Where data lives
     - Who "owns" a backup

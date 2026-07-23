@@ -55,15 +55,14 @@ Select a link to expand the content previewed in the outline below it.
     - [Via pubsub](./docs/pairing/transport/pubsub.md) (live connection)
     - [Via sneakernet](./docs/pairing/transport/sneakernet.md) (disjoint/airgapped networks)
 - [Data, exchange and handling](./docs/pairing/data,exchange,handling.md)
-- [Security and recovery](./docs/pairing/data,exchange,handling.md)
+- [Security and recovery](./docs/pairing/security/recovery.md)
 
 ### [**Backups**:](./docs/backups.md)
 - [Data in a backup](./docs/backups/data.md):
-    - `ManagedConfigs`
-    - Published IPNS records
-    - Private IPNS keys
-    - Blocks (CARs)
-    - CARs in a backup
+    - [`ManagedConfigs`](./docs/backups/data/ManagedConfigs.md)
+    - [Published IPNS records](./docs/backups/data/ipns/public-records.md)
+    - [Private IPNS keys](./docs/backups/data/ipns/private-keys.md)
+    - [Block sets (CARs)](./docs/backups/data/CARs.md)
 - For each "Data in a backup", we ask: 
     - Where data lives
     - Who "owns" a backup
